@@ -623,16 +623,16 @@ app.get("/api/viewer/reports", authMiddleware, async (req, res) => {
         if (tab === "pending") {
             query = {
                 $or: [
-                    { workflow_status: { $in: ["SUBMITTED", "RESUBMITTED"] } },
+                    { workflow_status: { $in: ["SUBMITTED", "RESUBMITTED", "UNDER_VIEWER_REVIEW"] } },
                     { workflow_status: { $exists: false } }
                 ]
             };
-            sortOrder = { createdAt: 1 }; // Oldest-first so nothing sits unreviewed
+            sortOrder = { createdAt: 1 };
         } else if (tab === "sent") {
-            query = { workflow_status: { $in: ["PENDING_ADMIN_APPROVAL", "APPROVED", "ISSUED"] } };
+            query = { workflow_status: { $in: ["PENDING_ADMIN_APPROVAL", "APPROVED", "CERTIFIED", "ISSUED"] } };
             sortOrder = { createdAt: -1 };
         } else if (tab === "rejected") {
-            query = { workflow_status: "REJECTED_BY_ADMIN" };
+            query = { workflow_status: { $in: ["REJECTED_BY_VIEWER", "REJECTED_BY_ADMIN", "SENT_BACK_TO_TESTER"] } };
             sortOrder = { createdAt: -1 };
         }
 
@@ -682,11 +682,11 @@ app.post("/api/viewer/reports/:id/review", authMiddleware, async (req, res) => {
         // Guardrail: Rejection requires at least one row-level comment or explanation
         const hasComments = Array.isArray(comments) ? comments.some(c => c && c.comment && c.comment.trim().length > 0) : (general_comment && general_comment.trim().length > 0);
         if (action === "REJECT" && !hasComments) {
-            return res.status(400).json({ error: "Rejection requires at least one row-level test comment before sending back to the tester." });
+            return res.status(400).json({ error: "Rejection requires at least one test comment explaining what the tester needs to fix." });
         }
 
         const reviewerName = req.username || req.user.name || "Quality Reviewer";
-        const newStatus = action === "APPROVE" ? "PENDING_ADMIN_APPROVAL" : "SENT_BACK_TO_TESTER";
+        const newStatus = action === "APPROVE" ? "PENDING_ADMIN_APPROVAL" : "REJECTED_BY_VIEWER";
 
         report.workflow_status = newStatus;
         report.reviewedBy = reviewerName;
@@ -696,7 +696,8 @@ app.post("/api/viewer/reports/:id/review", authMiddleware, async (req, res) => {
 
         const historyItem = {
             reviewer: reviewerName,
-            action: action === "APPROVE" ? "FORWARDED_TO_ADMIN" : "REJECTED_TO_TESTER",
+            role: "Viewer",
+            action: action === "APPROVE" ? "FORWARDED_TO_ADMIN" : "REJECTED_BY_VIEWER",
             comments: comments || [],
             general_comment: general_comment || "",
             timestamp: new Date()
@@ -718,12 +719,70 @@ app.post("/api/viewer/reports/:id/review", authMiddleware, async (req, res) => {
         res.json({
             success: true,
             message: action === "APPROVE" 
-                ? "Report successfully reviewed and forwarded to Admin for approval." 
-                : "Report sent back to Tester with review comments for correction.",
+                ? "Report successfully verified and sent to Admin for final certification approval." 
+                : "Report rejected by Viewer with comments and returned to Tester for re-testing.",
             report
         });
     } catch (err) {
         console.error("Viewer review error:", err);
+        res.status(500).json({ error: err.message });
+    }
+});
+
+// 4. Admin Review Decision (Approve or Reject back to Tester/Viewer)
+app.post("/api/admin/reports/:id/review", authMiddleware, adminMiddleware, async (req, res) => {
+    try {
+        const { id } = req.params;
+        const { action, general_comment } = req.body; // action: "APPROVE" | "REJECT"
+
+        if (!action || !["APPROVE", "REJECT"].includes(action)) {
+            return res.status(400).json({ error: "Invalid action. Must be 'APPROVE' or 'REJECT'." });
+        }
+
+        const report = await Report.findById(id);
+        if (!report) {
+            return res.status(404).json({ error: "Report not found." });
+        }
+
+        if (action === "REJECT" && (!general_comment || general_comment.trim().length === 0)) {
+            return res.status(400).json({ error: "Admin rejection requires an explanatory comment for the tester and viewer." });
+        }
+
+        const adminName = req.username || req.user.name || "Admin Authority";
+        const newStatus = action === "APPROVE" ? "APPROVED" : "REJECTED_BY_ADMIN";
+
+        report.workflow_status = newStatus;
+        report.approvedBy = adminName;
+
+        const historyItem = {
+            reviewer: adminName,
+            role: "Admin",
+            action: action === "APPROVE" ? "APPROVED_BY_ADMIN" : "REJECTED_BY_ADMIN",
+            general_comment: general_comment || "",
+            timestamp: new Date()
+        };
+
+        if (!Array.isArray(report.review_history)) {
+            report.review_history = [];
+        }
+        report.review_history.push(historyItem);
+
+        await report.save();
+
+        await AuditLog.create({
+            user: adminName,
+            action: action === "APPROVE" ? "Admin Approved Report" : "Admin Rejected Report",
+            details: `Report ID: ${id} -> Status: ${newStatus}`
+        });
+
+        res.json({
+            success: true,
+            message: action === "APPROVE"
+                ? "Report approved by Admin. Ready for certificate issuance!"
+                : "Report rejected by Admin and returned to Tester and Viewer with comments.",
+            report
+        });
+    } catch (err) {
         res.status(500).json({ error: err.message });
     }
 });

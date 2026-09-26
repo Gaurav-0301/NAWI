@@ -34,7 +34,7 @@ const ReportSchema = new mongoose.Schema({
     report_status:           { type: String, enum: ["ISSUED", "SUPERSEDED"], default: "ISSUED" },
     workflow_status:         { 
         type: String, 
-        enum: ["SUBMITTED", "RESUBMITTED", "PENDING_ADMIN_APPROVAL", "SENT_BACK_TO_TESTER", "REJECTED_BY_ADMIN", "APPROVED", "ISSUED"], 
+        enum: ["SUBMITTED", "RESUBMITTED", "UNDER_VIEWER_REVIEW", "PENDING_ADMIN_APPROVAL", "REJECTED_BY_VIEWER", "REJECTED_BY_ADMIN", "APPROVED", "CERTIFIED", "SENT_BACK_TO_TESTER", "ISSUED"], 
         default: "SUBMITTED" 
     },
     status:                  { type: String, default: "PASS" },

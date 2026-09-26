@@ -97,38 +97,100 @@ export default function ReportSummaryPage() {
                             </div>
                         </div>
 
-                        {/* Evidence Badge */}
-                        <div style={{ margin: '16px 0 24px', padding: '12px 16px', background: '#f0fdfa', borderLeft: '4px solid #F29F67', borderRadius: '4px', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-                            <div>
-                                <strong style={{ fontSize: '0.9rem', color: '#1e293b' }}>
-                                    <i className="fas fa-folder-open" style={{ color: '#F29F67' }}></i> OIML R 76-2 Evidence Register
-                                </strong>
-                                <p style={{ margin: '2px 0 0 0', fontSize: '0.8rem', color: '#64748b' }}>
-                                    {evCount} registered administrative photo(s), document(s) & test setup evidence items.
-                                </p>
+                        {/* Workflow Status Banner */}
+                        <div style={{ background: '#F8FAFC', border: '1.5px solid #CBD5E1', borderRadius: '10px', padding: '16px', marginBottom: '20px' }}>
+                            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '10px' }}>
+                                <span style={{ fontWeight: 700, fontSize: '0.85rem', color: '#334155', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
+                                    <i className="fas fa-network-wired" style={{ color: '#F29F67', marginRight: '6px' }}></i>
+                                    Verification Workflow Stage
+                                </span>
+                                <span style={{
+                                    padding: '4px 12px',
+                                    borderRadius: '12px',
+                                    fontSize: '0.78rem',
+                                    fontWeight: 700,
+                                    background: ['REJECTED_BY_VIEWER', 'REJECTED_BY_ADMIN'].includes(report.workflow_status) ? '#FEE2E2' : report.workflow_status === 'CERTIFIED' ? '#ECFDF5' : '#FEF3C7',
+                                    color: ['REJECTED_BY_VIEWER', 'REJECTED_BY_ADMIN'].includes(report.workflow_status) ? '#991B1B' : report.workflow_status === 'CERTIFIED' ? '#047857' : '#B45309'
+                                }}>
+                                    {report.workflow_status || 'SUBMITTED'}
+                                </span>
                             </div>
-                            <span style={{ background: '#e2e8f0', color: '#0f172a', fontSize: '0.78rem', fontWeight: 700, padding: '4px 10px', borderRadius: '12px' }}>
-                                {evCount} Item(s)
-                            </span>
+
+                            {/* Chain of Custody */}
+                            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '12px', fontSize: '0.82rem', color: '#475569' }}>
+                                <div><i className="fas fa-user-edit" style={{ color: '#3B8FF3' }}></i> <strong>Tester:</strong> {report.createdBy || 'Inspection Officer'}</div>
+                                <div><i className="fas fa-user-check" style={{ color: '#10B981' }}></i> <strong>Viewer (Reviewer):</strong> {report.reviewedBy || 'Quality Reviewer'}</div>
+                                <div><i className="fas fa-stamp" style={{ color: '#F29F67' }}></i> <strong>Admin Official:</strong> {report.approvedBy || 'Admin Authority'}</div>
+                            </div>
+
+                            {/* Rejection Comments Box */}
+                            {['REJECTED_BY_VIEWER', 'REJECTED_BY_ADMIN', 'SENT_BACK_TO_TESTER'].includes(report.workflow_status) && (
+                                <div style={{ marginTop: '14px', padding: '12px', background: '#FEF2F2', border: '1px solid #FECACA', borderRadius: '6px', color: '#991B1B' }}>
+                                    <strong><i className="fas fa-comment-dots"></i> Reviewer Rejection Comments / Instructions:</strong>
+                                    <div style={{ marginTop: '4px', fontSize: '0.85rem' }}>
+                                        {report.review_history && report.review_history.length > 0 ? (
+                                            report.review_history[report.review_history.length - 1].general_comment || report.review_history[report.review_history.length - 1].action
+                                        ) : "Observations returned for re-testing."}
+                                    </div>
+                                </div>
+                            )}
                         </div>
 
-                        {/* Test Rows */}
+                        {/* Uploaded Instrument Photographs Gallery */}
+                        {((report.administrative_evidence && report.administrative_evidence.photos) || report.instrument_photo) && (
+                            <div style={{ marginBottom: '20px', padding: '16px', background: 'white', border: '1px solid #e2e8f0', borderRadius: '10px' }}>
+                                <h4 style={{ margin: '0 0 12px 0', border: 'none', color: '#1e293b', fontSize: '0.92rem', display: 'flex', alignItems: 'center', gap: '8px' }}>
+                                    <i className="fas fa-camera" style={{ color: '#F29F67' }}></i> Uploaded Instrument Photographs (Visual Verification)
+                                </h4>
+                                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: '12px' }}>
+                                    {report.administrative_evidence?.photos?.front && (
+                                        <div style={{ borderRadius: '8px', overflow: 'hidden', border: '1px solid #e2e8f0' }}>
+                                            <img src={report.administrative_evidence.photos.front} alt="Front View" style={{ width: '100%', height: '110px', objectFit: 'cover' }} />
+                                            <div style={{ padding: '4px 8px', fontSize: '0.75rem', fontWeight: 600, color: '#475569', textAlign: 'center', background: '#f8fafc' }}>Front View Photo</div>
+                                        </div>
+                                    )}
+                                    {report.administrative_evidence?.photos?.nameplate && (
+                                        <div style={{ borderRadius: '8px', overflow: 'hidden', border: '1px solid #e2e8f0' }}>
+                                            <img src={report.administrative_evidence.photos.nameplate} alt="Nameplate" style={{ width: '100%', height: '110px', objectFit: 'cover' }} />
+                                            <div style={{ padding: '4px 8px', fontSize: '0.75rem', fontWeight: 600, color: '#475569', textAlign: 'center', background: '#f8fafc' }}>Nameplate / Markings</div>
+                                        </div>
+                                    )}
+                                    {report.administrative_evidence?.photos?.rear_side && (
+                                        <div style={{ borderRadius: '8px', overflow: 'hidden', border: '1px solid #e2e8f0' }}>
+                                            <img src={report.administrative_evidence.photos.rear_side} alt="Rear View" style={{ width: '100%', height: '110px', objectFit: 'cover' }} />
+                                            <div style={{ padding: '4px 8px', fontSize: '0.75rem', fontWeight: 600, color: '#475569', textAlign: 'center', background: '#f8fafc' }}>Rear / Side View</div>
+                                        </div>
+                                    )}
+                                    {!report.administrative_evidence?.photos?.front && report.instrument_photo && (
+                                        <div style={{ borderRadius: '8px', overflow: 'hidden', border: '1px solid #e2e8f0' }}>
+                                            <img src={report.instrument_photo} alt="Instrument Photo" style={{ width: '100%', height: '110px', objectFit: 'cover' }} />
+                                            <div style={{ padding: '4px 8px', fontSize: '0.75rem', fontWeight: 600, color: '#475569', textAlign: 'center', background: '#f8fafc' }}>Instrument Photo</div>
+                                        </div>
+                                    )}
+                                </div>
+                            </div>
+                        )}
+
+                        {/* Test Rows with OIML R-76 Clauses */}
                         <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', marginBottom: '24px' }}>
                             {Object.entries({
-                                visual: { label: 'Visual Inspection', sub: 'Markings and conditions verified' },
-                                weighing: { label: 'Weighing Performance', sub: 'Load observations against MPE' },
-                                repeatability: { label: 'Repeatability', sub: 'Variation within permissible limits' },
-                                eccentricity: { label: 'Eccentricity', sub: 'Off-center loading errors' },
-                                zero: { label: 'Zero Test', sub: 'Zero-setting accuracy' },
-                                tare: { label: 'Tare Accuracy', sub: 'Net weight accuracy' },
-                                tilt: { label: 'Tilt Test', sub: 'Leveling variation' }
+                                visual: { label: 'Visual Inspection', sub: 'Markings and construction verified', clause: 'Clause 3.10 / Annex A.2' },
+                                weighing: { label: 'Weighing Performance', sub: 'Load observations against MPE tolerances', clause: 'Clause 3.5.1 / Annex A.4.4' },
+                                repeatability: { label: 'Repeatability', sub: 'Variation within permissible limits', clause: 'Clause 3.6.1 / Annex A.4.4' },
+                                eccentricity: { label: 'Eccentricity', sub: 'Off-center loading errors', clause: 'Clause 3.6.2 / Annex A.4.7' },
+                                zero: { label: 'Zero Test', sub: 'Zero-setting & zero-tracking accuracy', clause: 'Clause 3.8.1 / Annex A.4.2' },
+                                tare: { label: 'Tare Accuracy', sub: 'Net weight accuracy', clause: 'Clause 3.5.3.4 / Annex A.4.6' },
+                                tilt: { label: 'Tilt Test', sub: 'Leveling variation', clause: 'Clause 3.9.1 / Annex A.5' }
                             }).map(([key, item]) => {
                                 const st = testStatus[key];
                                 if (!st) return null;
                                 return (
                                     <div key={key} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '12px 16px', background: '#ffffff', border: '1px solid #e2e8f0', borderRadius: '8px' }}>
                                         <div>
-                                            <h4 style={{ margin: '0 0 2px 0', border: 'none', padding: 0, fontSize: '0.95rem' }}>{item.label}</h4>
+                                            <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                                                <h4 style={{ margin: '0 0 2px 0', border: 'none', padding: 0, fontSize: '0.95rem' }}>{item.label}</h4>
+                                                <span style={{ fontSize: '0.72rem', background: '#f1f5f9', color: '#475569', padding: '2px 6px', borderRadius: '4px', fontFamily: 'monospace' }}>{item.clause}</span>
+                                            </div>
                                             <span style={{ fontSize: '0.8rem', color: '#64748b' }}>{item.sub}</span>
                                         </div>
                                         <span className={`status-badge ${st === 'PASS' ? 'status-pass' : 'status-fail'}`}>
