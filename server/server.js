@@ -577,6 +577,154 @@ app.get("/api/report/:id", authMiddleware, async (req, res) => {
     }
 });
 
+// ── VIEWER (REVIEWER) ROLE API ROUTES ────────────────────────────
+
+// 1. Viewer Summary Analytics Counts
+app.get("/api/viewer/stats", authMiddleware, async (req, res) => {
+    try {
+        const labsCount = await User.countDocuments({});
+        const pendingReviewCount = await Report.countDocuments({
+            $or: [
+                { workflow_status: { $in: ["SUBMITTED", "RESUBMITTED"] } },
+                { workflow_status: { $exists: false } }
+            ]
+        });
+        const sentForApprovalCount = await Report.countDocuments({
+            workflow_status: "PENDING_ADMIN_APPROVAL"
+        });
+        const certificatesIssuedCount = await Report.countDocuments({
+            $or: [
+                { sha256_hash: { $exists: true, $ne: null } },
+                { workflow_status: { $in: ["APPROVED", "ISSUED"] } }
+            ]
+        });
+
+        res.json({
+            labsCount,
+            pendingReviewCount,
+            sentForApprovalCount,
+            certificatesIssuedCount
+        });
+    } catch (err) {
+        res.status(500).json({ error: err.message });
+    }
+});
+
+// 2. Viewer Queue Reports List filtered by status tabs
+app.get("/api/viewer/reports", authMiddleware, async (req, res) => {
+    try {
+        const { tab = "pending" } = req.query;
+        let query = {};
+        let sortOrder = { createdAt: 1 };
+
+        if (tab === "pending") {
+            query = {
+                $or: [
+                    { workflow_status: { $in: ["SUBMITTED", "RESUBMITTED"] } },
+                    { workflow_status: { $exists: false } }
+                ]
+            };
+            sortOrder = { createdAt: 1 }; // Oldest-first so nothing sits unreviewed
+        } else if (tab === "sent") {
+            query = { workflow_status: { $in: ["PENDING_ADMIN_APPROVAL", "APPROVED", "ISSUED"] } };
+            sortOrder = { createdAt: -1 };
+        } else if (tab === "rejected") {
+            query = { workflow_status: "REJECTED_BY_ADMIN" };
+            sortOrder = { createdAt: -1 };
+        }
+
+        const reports = await Report.find(query).sort(sortOrder).lean();
+
+        reports.forEach(r => {
+            let isPass = true;
+            const results = [r.form1_results, r.form2_results, r.form3_results, r.form_zero_results, r.form_tare_results, r.form_tilt_results];
+            for (let res of results) {
+                if (res) {
+                    const str = JSON.stringify(res);
+                    if (str.includes('"FAIL"')) {
+                        isPass = false;
+                        break;
+                    }
+                }
+            }
+            r.status = isPass ? "PASS" : "FAIL";
+            r.serial_no = (r.instrument_data && r.instrument_data.serial_no) ? r.instrument_data.serial_no : "N/A";
+            r.accuracy_class = (r.instrument_data && r.instrument_data.Class_value) ? r.instrument_data.Class_value : (r.accuracy_class || "III");
+            r.instrument_type = (r.instrument_data && r.instrument_data.instrument_type) ? r.instrument_data.instrument_type : "NAWI Instrument";
+            r.model = (r.instrument_data && (r.instrument_data.model || r.instrument_data.instrument_type)) || r.instrument_id || "NAWI Model";
+            r.workflow_status = r.workflow_status || "SUBMITTED";
+        });
+
+        res.json(reports);
+    } catch (err) {
+        res.status(500).json({ error: err.message });
+    }
+});
+
+// 3. Viewer Submit Review Decision (Approve to Admin or Reject back to Tester)
+app.post("/api/viewer/reports/:id/review", authMiddleware, async (req, res) => {
+    try {
+        const { id } = req.params;
+        const { action, comments, general_comment } = req.body; // action: "APPROVE" | "REJECT"
+
+        if (!action || !["APPROVE", "REJECT"].includes(action)) {
+            return res.status(400).json({ error: "Invalid action. Must be 'APPROVE' or 'REJECT'." });
+        }
+
+        const report = await Report.findById(id);
+        if (!report) {
+            return res.status(404).json({ error: "Report not found." });
+        }
+
+        // Guardrail: Rejection requires at least one row-level comment or explanation
+        const hasComments = Array.isArray(comments) ? comments.some(c => c && c.comment && c.comment.trim().length > 0) : (general_comment && general_comment.trim().length > 0);
+        if (action === "REJECT" && !hasComments) {
+            return res.status(400).json({ error: "Rejection requires at least one row-level test comment before sending back to the tester." });
+        }
+
+        const reviewerName = req.username || req.user.name || "Quality Reviewer";
+        const newStatus = action === "APPROVE" ? "PENDING_ADMIN_APPROVAL" : "SENT_BACK_TO_TESTER";
+
+        report.workflow_status = newStatus;
+        report.reviewedBy = reviewerName;
+        if (Array.isArray(comments) && comments.length > 0) {
+            report.test_comments = comments;
+        }
+
+        const historyItem = {
+            reviewer: reviewerName,
+            action: action === "APPROVE" ? "FORWARDED_TO_ADMIN" : "REJECTED_TO_TESTER",
+            comments: comments || [],
+            general_comment: general_comment || "",
+            timestamp: new Date()
+        };
+
+        if (!Array.isArray(report.review_history)) {
+            report.review_history = [];
+        }
+        report.review_history.push(historyItem);
+
+        await report.save();
+
+        await AuditLog.create({
+            user: reviewerName,
+            action: action === "APPROVE" ? "Viewer Approved Report" : "Viewer Rejected Report",
+            details: `Report ID: ${id} (${report.instrument_id}) -> Moved to status: ${newStatus}`
+        });
+
+        res.json({
+            success: true,
+            message: action === "APPROVE" 
+                ? "Report successfully reviewed and forwarded to Admin for approval." 
+                : "Report sent back to Tester with review comments for correction.",
+            report
+        });
+    } catch (err) {
+        console.error("Viewer review error:", err);
+        res.status(500).json({ error: err.message });
+    }
+});
+
 // ── RULE SET & ADMIN ROUTES ──────────────────────────────────────
 
 app.get("/api/rules/active", async (req, res) => {

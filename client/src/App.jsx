@@ -14,6 +14,7 @@ import ReportSummaryPage from './pages/ReportSummaryPage';
 import ReportDetailedPage from './pages/ReportDetailedPage';
 import CertificatePage from './pages/CertificatePage';
 import AdminDashboardPage from './pages/AdminDashboardPage';
+import ViewerDashboardPage from './pages/ViewerDashboardPage';
 import PublicVerifyPage from './pages/PublicVerifyPage';
 
 function ProtectedRoute({ children, adminOnly = false }) {
@@ -53,6 +54,12 @@ export default function App() {
                     <Route path="/home" element={
                         <ProtectedRoute>
                             <HomePage />
+                        </ProtectedRoute>
+                    } />
+                    
+                    <Route path="/viewer" element={
+                        <ProtectedRoute>
+                            <ViewerDashboardPage />
                         </ProtectedRoute>
                     } />
                     

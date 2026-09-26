@@ -51,6 +51,25 @@ export default function Sidebar() {
                             <i className="fas fa-history w-5 text-center"></i> <span>All Reports</span>
                         </NavLink>
                     </>
+                ) : role === 'viewer' ? (
+                    <>
+                        <NavLink 
+                            to="/viewer" 
+                            className={({ isActive }) => `flex items-center gap-3 px-5 py-3 text-sm font-medium transition-all no-underline border-l-4 ${
+                                isActive ? 'bg-[#F29F67]/15 text-[#F29F67] border-[#F29F67]' : 'text-slate-400 hover:bg-white/5 hover:text-white border-transparent'
+                            }`}
+                        >
+                            <i className="fas fa-search-plus w-5 text-center"></i> <span>Review Queue</span>
+                        </NavLink>
+                        <NavLink 
+                            to="/history" 
+                            className={({ isActive }) => `flex items-center gap-3 px-5 py-3 text-sm font-medium transition-all no-underline border-l-4 ${
+                                isActive ? 'bg-[#F29F67]/15 text-[#F29F67] border-[#F29F67]' : 'text-slate-400 hover:bg-white/5 hover:text-white border-transparent'
+                            }`}
+                        >
+                            <i className="fas fa-history w-5 text-center"></i> <span>Archived Reports</span>
+                        </NavLink>
+                    </>
                 ) : (
                     <>
                         <NavLink 

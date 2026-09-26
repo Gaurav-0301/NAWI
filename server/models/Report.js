@@ -32,6 +32,16 @@ const ReportSchema = new mongoose.Schema({
     // Cryptographic Seal & Status
     sha256_hash:             String,
     report_status:           { type: String, enum: ["ISSUED", "SUPERSEDED"], default: "ISSUED" },
+    workflow_status:         { 
+        type: String, 
+        enum: ["SUBMITTED", "RESUBMITTED", "PENDING_ADMIN_APPROVAL", "SENT_BACK_TO_TESTER", "REJECTED_BY_ADMIN", "APPROVED", "ISSUED"], 
+        default: "SUBMITTED" 
+    },
+    status:                  { type: String, default: "PASS" },
+    serial_no:               String,
+    accuracy_class:          String,
+    test_comments:           mongoose.Schema.Types.Mixed, // Row-level comments tied to specific tests
+    review_history:          mongoose.Schema.Types.Mixed, // Historical log of review decisions
     supersededBy:            String, // ID of replacing report if superseded
 
     createdAt:               { type: Date, default: Date.now }
