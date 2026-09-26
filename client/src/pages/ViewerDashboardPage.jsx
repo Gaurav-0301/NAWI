@@ -545,25 +545,6 @@ export default function ViewerDashboardPage() {
 
                             <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
                                 <a
-                                    href={`/report/${selectedReport._id}`}
-                                    target="_blank"
-                                    rel="noopener noreferrer"
-                                    style={{
-                                        background: '#F29F67',
-                                        color: 'white',
-                                        padding: '6px 14px',
-                                        borderRadius: '6px',
-                                        fontSize: '0.8rem',
-                                        fontWeight: 700,
-                                        textDecoration: 'none',
-                                        display: 'flex',
-                                        alignItems: 'center',
-                                        gap: '6px'
-                                    }}
-                                >
-                                    <i className="fas fa-file-alt"></i> View Report Summary
-                                </a>
-                                <a
                                     href={`/report-detailed/${selectedReport._id}`}
                                     target="_blank"
                                     rel="noopener noreferrer"
@@ -580,7 +561,7 @@ export default function ViewerDashboardPage() {
                                         gap: '6px'
                                     }}
                                 >
-                                    <i className="fas fa-list-check"></i> View Detailed Report
+                                    <i className="fas fa-list-check"></i> View Full Detailed Report
                                 </a>
                                 <button
                                     onClick={() => setReviewModalOpen(false)}
