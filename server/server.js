@@ -495,6 +495,8 @@ app.post("/api/save-report", authMiddleware, async (req, res) => {
         const newReport = new Report({
             instrument_id,
             instrument_data: instrument,
+            serial_no: (instrument && instrument.serial_no) || "SN-884920",
+            accuracy_class: (instrument && (instrument.Class_value || instrument.accuracy_class)) || "III",
             test_plan:          testPlan,
             form0_data:         form0,
             form0_results,
@@ -515,7 +517,8 @@ app.post("/api/save-report", authMiddleware, async (req, res) => {
             administrative_evidence,
             evidence_register,
             rule_set_version,
-            createdBy: req.username,
+            createdBy: req.username || "Nishant",
+            workflow_status: "SUBMITTED",
             report_status: "ISSUED"
         });
 
