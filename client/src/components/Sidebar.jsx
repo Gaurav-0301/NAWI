@@ -26,7 +26,7 @@ export default function Sidebar() {
                     <i className="fas fa-balance-scale-right"></i>
                 </div>
                 <div className="text-white font-bold text-base font-['Outfit'] tracking-wide">
-                    NAWI <span className="text-[#F29F67]">REPORTED</span>
+                    NAWI
                 </div>
             </div>
             
