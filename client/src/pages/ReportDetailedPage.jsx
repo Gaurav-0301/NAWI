@@ -94,9 +94,15 @@ export default function ReportDetailedPage() {
                                     <i className="fas fa-file-pdf"></i> Save as Certificate PDF
                                 </button>
                             )}
-                            <Link to={`/report/${report._id}`} className="btn-secondary" style={{ padding: '10px 18px', borderRadius: '6px', textDecoration: 'none', fontWeight: 600 }}>
-                                <i className="fas fa-arrow-left"></i> Summary
-                            </Link>
+                            {user?.role === 'viewer' ? (
+                                <Link to="/viewer" className="btn-secondary" style={{ padding: '10px 18px', borderRadius: '6px', textDecoration: 'none', fontWeight: 600 }}>
+                                    <i className="fas fa-arrow-left"></i> Back to Review Queue
+                                </Link>
+                            ) : (
+                                <Link to={`/report/${report._id}`} className="btn-secondary" style={{ padding: '10px 18px', borderRadius: '6px', textDecoration: 'none', fontWeight: 600 }}>
+                                    <i className="fas fa-arrow-left"></i> Summary
+                                </Link>
+                            )}
                         </div>
                     </div>
 
