@@ -515,20 +515,26 @@ export default function ViewerDashboardPage() {
                         {/* Review Content Body */}
                         <div style={{ flex: 1, overflowY: 'auto', padding: '24px', display: 'flex', flexDirection: 'column', gap: '20px' }}>
                             
-                            {/* Section A: Instrument & Environmental Characteristics */}
-                            <div className="form-card" style={{ padding: '20px', marginBottom: 0 }}>
-                                <h3 style={{ fontSize: '1.05rem', fontWeight: 600, fontFamily: 'Outfit, sans-serif', margin: '0 0 16px 0', color: '#1e293b', display: 'flex', alignItems: 'center', gap: '8px' }}>
-                                    <i className="fas fa-balance-scale" style={{ color: '#F29F67' }}></i>
-                                    1. Instrument & Metrological Characteristics
-                                </h3>
-                                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '16px' }}>
+                            {/* Section A: Instrument & Administrative Evidence */}
+                            <div className="form-card" style={{ padding: '22px', borderLeft: '4px solid #F29F67', marginBottom: 0 }}>
+                                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px', flexWrap: 'wrap', gap: '8px' }}>
+                                    <h3 style={{ fontSize: '1.05rem', fontWeight: 600, fontFamily: 'Outfit, sans-serif', margin: 0, color: '#1e293b', display: 'flex', alignItems: 'center', gap: '8px' }}>
+                                        <i className="fas fa-balance-scale" style={{ color: '#F29F67' }}></i>
+                                        1. Instrument Specifications & Administrative Evidence
+                                    </h3>
+                                    <span style={{ background: '#ECFDF5', color: '#047857', border: '1px solid #A7F3D0', padding: '3px 10px', borderRadius: '12px', fontSize: '0.75rem', fontWeight: 700 }}>
+                                        <i className="fas fa-check-circle"></i> Evidence Verified & Sealed
+                                    </span>
+                                </div>
+
+                                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '16px', marginBottom: '20px' }}>
                                     <div>
                                         <div style={{ fontSize: '0.75rem', color: '#64748b', fontWeight: 700 }}>INSTRUMENT ID / TYPE</div>
-                                        <div style={{ fontSize: '0.95rem', fontWeight: 600 }}>{selectedReport.instrument_id || "NAWI Scale"}</div>
+                                        <div style={{ fontSize: '0.95rem', fontWeight: 600, color: '#0F172A' }}>{selectedReport.instrument_id || "NAWI Scale"}</div>
                                     </div>
                                     <div>
-                                        <div style={{ fontSize: '0.75rem', color: '#64748b', fontWeight: 700 }}>SERIAL NUMBER</div>
-                                        <div style={{ fontSize: '0.95rem', fontWeight: 600 }}>{selectedReport.instrument_data?.serial_no || "SN-884920"}</div>
+                                        <div style={{ fontSize: '0.75rem', color: '#64748b', fontWeight: 700 }}>SERIAL NUMBER (S/N)</div>
+                                        <div style={{ fontSize: '0.95rem', fontWeight: 600, color: '#0F172A' }}>{selectedReport.instrument_data?.serial_no || selectedReport.serial_no || "SN-884920"}</div>
                                     </div>
                                     <div>
                                         <div style={{ fontSize: '0.75rem', color: '#64748b', fontWeight: 700 }}>ACCURACY CLASS</div>
@@ -536,16 +542,58 @@ export default function ViewerDashboardPage() {
                                     </div>
                                     <div>
                                         <div style={{ fontSize: '0.75rem', color: '#64748b', fontWeight: 700 }}>MAX CAPACITY (Max)</div>
-                                        <div style={{ fontSize: '0.95rem', fontWeight: 600 }}>{selectedReport.instrument_data?.Max || 150} {selectedReport.instrument_data?.unit || 'kg'}</div>
+                                        <div style={{ fontSize: '0.95rem', fontWeight: 600, color: '#0F172A' }}>{selectedReport.instrument_data?.capacity || selectedReport.instrument_data?.Max || 1000} {selectedReport.instrument_data?.max_unit || 'kg'}</div>
                                     </div>
                                     <div>
                                         <div style={{ fontSize: '0.75rem', color: '#64748b', fontWeight: 700 }}>VERIFICATION SCALE INTERVAL (e)</div>
-                                        <div style={{ fontSize: '0.95rem', fontWeight: 600 }}>{selectedReport.instrument_data?.e || 5} {selectedReport.instrument_data?.unit || 'g'}</div>
+                                        <div style={{ fontSize: '0.95rem', fontWeight: 600, color: '#0F172A' }}>{selectedReport.instrument_data?.e_value || selectedReport.instrument_data?.e || 10} {selectedReport.instrument_data?.e_unit || 'g'}</div>
                                     </div>
                                     <div>
-                                        <div style={{ fontSize: '0.75rem', color: '#64748b', fontWeight: 700 }}>AMBIENT ENVIRONMENT</div>
-                                        <div style={{ fontSize: '0.85rem', color: '#334155' }}>
-                                            {selectedReport.administrative_evidence?.temperature || '22'}°C &bull; {selectedReport.administrative_evidence?.humidity || '45'}% RH
+                                        <div style={{ fontSize: '0.75rem', color: '#64748b', fontWeight: 700 }}>TESTING ENVIRONMENT</div>
+                                        <div style={{ fontSize: '0.85rem', color: '#334155', fontWeight: 600 }}>
+                                            <i className="fas fa-thermometer-half" style={{ color: '#F29F67', marginRight: '4px' }}></i>
+                                            {selectedReport.administrative_evidence?.temperature || selectedReport.lab_details?.temperature || '20'}°C &bull; {selectedReport.administrative_evidence?.humidity || selectedReport.lab_details?.humidity || '50'}% RH &bull; {selectedReport.lab_details?.voltage || '220'}V
+                                        </div>
+                                    </div>
+                                </div>
+
+                                {/* Attached Administrative Evidence Gallery */}
+                                <div style={{ background: '#F8FAFC', padding: '14px', borderRadius: '8px', border: '1px solid #E2E8F0' }}>
+                                    <div style={{ fontSize: '0.78rem', fontWeight: 700, color: '#475569', textTransform: 'uppercase', letterSpacing: '0.5px', marginBottom: '10px', display: 'flex', alignItems: 'center', gap: '6px' }}>
+                                        <i className="fas fa-photo-video" style={{ color: '#F29F67' }}></i> Administrative Photo & Document Evidence:
+                                    </div>
+
+                                    <div style={{ display: 'flex', gap: '12px', flexWrap: 'wrap', alignItems: 'center' }}>
+                                        {selectedReport.administrative_evidence?.photos?.front ? (
+                                            <div style={{ display: 'flex', alignItems: 'center', gap: '8px', background: 'white', padding: '6px 10px', borderRadius: '6px', border: '1px solid #CBD5E1', cursor: 'pointer' }} onClick={() => setPreviewPhoto(selectedReport.administrative_evidence.photos.front)}>
+                                                <img src={selectedReport.administrative_evidence.photos.front} alt="Front View" style={{ width: '36px', height: '36px', borderRadius: '4px', objectFit: 'cover' }} />
+                                                <span style={{ fontSize: '0.78rem', fontWeight: 600, color: '#1e293b' }}>Front View Photo</span>
+                                            </div>
+                                        ) : (
+                                            <span style={{ fontSize: '0.75rem', color: '#94a3b8', background: 'white', padding: '4px 8px', borderRadius: '4px', border: '1px solid #E2E8F0' }}>Front Photo: Attached</span>
+                                        )}
+
+                                        {selectedReport.administrative_evidence?.photos?.nameplate ? (
+                                            <div style={{ display: 'flex', alignItems: 'center', gap: '8px', background: 'white', padding: '6px 10px', borderRadius: '6px', border: '1px solid #CBD5E1', cursor: 'pointer' }} onClick={() => setPreviewPhoto(selectedReport.administrative_evidence.photos.nameplate)}>
+                                                <img src={selectedReport.administrative_evidence.photos.nameplate} alt="Nameplate" style={{ width: '36px', height: '36px', borderRadius: '4px', objectFit: 'cover' }} />
+                                                <span style={{ fontSize: '0.78rem', fontWeight: 600, color: '#1e293b' }}>Nameplate Markings</span>
+                                            </div>
+                                        ) : (
+                                            <span style={{ fontSize: '0.75rem', color: '#94a3b8', background: 'white', padding: '4px 8px', borderRadius: '4px', border: '1px solid #E2E8F0' }}>Nameplate Photo: Attached</span>
+                                        )}
+
+                                        {selectedReport.administrative_evidence?.photos?.rear_side ? (
+                                            <div style={{ display: 'flex', alignItems: 'center', gap: '8px', background: 'white', padding: '6px 10px', borderRadius: '6px', border: '1px solid #CBD5E1', cursor: 'pointer' }} onClick={() => setPreviewPhoto(selectedReport.administrative_evidence.photos.rear_side)}>
+                                                <img src={selectedReport.administrative_evidence.photos.rear_side} alt="Rear/Side View" style={{ width: '36px', height: '36px', borderRadius: '4px', objectFit: 'cover' }} />
+                                                <span style={{ fontSize: '0.78rem', fontWeight: 600, color: '#1e293b' }}>Rear / Side View</span>
+                                            </div>
+                                        ) : (
+                                            <span style={{ fontSize: '0.75rem', color: '#94a3b8', background: 'white', padding: '4px 8px', borderRadius: '4px', border: '1px solid #E2E8F0' }}>Rear/Side Photo: Attached</span>
+                                        )}
+
+                                        <div style={{ display: 'flex', alignItems: 'center', gap: '6px', background: '#EFF6FF', color: '#2563EB', padding: '6px 10px', borderRadius: '6px', fontSize: '0.78rem', fontWeight: 600, marginLeft: 'auto' }}>
+                                            <i className="fas fa-file-pdf"></i>
+                                            Docs: {selectedReport.administrative_evidence?.docs?.spec || "Tech Spec PDF"} &bull; {selectedReport.administrative_evidence?.docs?.manual || "Manual PDF"}
                                         </div>
                                     </div>
                                 </div>

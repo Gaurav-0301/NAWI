@@ -37,6 +37,12 @@ export default function NewTestPage() {
         doc_drawing: null
     });
 
+    const [previews, setPreviews] = useState({
+        photo_front: null,
+        photo_nameplate: null,
+        photo_rear_side: null
+    });
+
     useEffect(() => {
         fetch('/api/rules/active')
             .then(res => res.json())
@@ -56,8 +62,22 @@ export default function NewTestPage() {
 
     const handleFileChange = (e, field) => {
         if (e.target.files && e.target.files[0]) {
-            setFiles(prev => ({ ...prev, [field]: e.target.files[0] }));
+            const selectedFile = e.target.files[0];
+            setFiles(prev => ({ ...prev, [field]: selectedFile }));
+
+            if (field.startsWith('photo_')) {
+                const reader = new FileReader();
+                reader.onloadend = () => {
+                    setPreviews(prev => ({ ...prev, [field]: reader.result }));
+                };
+                reader.readAsDataURL(selectedFile);
+            }
         }
+    };
+
+    const removePhoto = (field) => {
+        setFiles(prev => ({ ...prev, [field]: null }));
+        setPreviews(prev => ({ ...prev, [field]: null }));
     };
 
     const readFileAsBase64 = (file) => {
@@ -96,7 +116,12 @@ export default function NewTestPage() {
                 spec: files.doc_tech_spec ? files.doc_tech_spec.name : "",
                 manual: files.doc_operating_manual ? files.doc_operating_manual.name : "",
                 drawing: files.doc_drawing ? files.doc_drawing.name : ""
-            }
+            },
+            temperature: formData.temperature,
+            humidity: formData.humidity,
+            voltage: formData.voltage,
+            lab_name: formData.lab_name,
+            lab_location: formData.lab_location
         };
 
         const labDetails = {
@@ -154,22 +179,28 @@ export default function NewTestPage() {
             <div className="app-main">
                 <Header title="Automatic Test Planner Setup" />
                 <div className="app-content">
-                    <div style={{ marginBottom: '24px' }}>
-                        <h2 style={{ fontSize: '1.6rem', margin: '0 0 6px 0' }}>Automatic Test Planner</h2>
-                        <p style={{ color: '#64748b' }}>Generate a standards-driven test plan from your instrument specifications.</p>
 
-                        <div style={{ marginTop: '14px', padding: '12px 18px', background: '#f0fdfa', border: '1.5px solid #F29F67', borderRadius: '8px' }}>
+                    {/* Page Header */}
+                    <div style={{ marginBottom: '24px' }}>
+                        <h2 style={{ fontSize: '1.6rem', margin: '0 0 6px 0', fontFamily: 'Outfit, sans-serif', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.5px' }}>
+                            AUTOMATIC TEST PLANNER SETUP
+                        </h2>
+                        <p style={{ color: '#64748b', fontSize: '0.95rem' }}>
+                            Configure instrument parameters & upload required OIML administrative evidence for automated evaluation.
+                        </p>
+
+                        <div style={{ marginTop: '14px', padding: '12px 18px', background: '#FEF0E6', border: '1.5px solid #F29F67', borderRadius: '8px' }}>
                             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: '8px' }}>
                                 <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-                                    <span style={{ background: '#F29F67', color: '#1E1E2C', fontSize: '0.75rem', fontWeight: '700', padding: '3px 10px', borderRadius: '12px' }}>
-                                        <i className="fas fa-check-circle"></i> ACTIVE RULE SET
+                                    <span style={{ background: '#F29F67', color: 'white', fontSize: '0.75rem', fontWeight: 700, padding: '3px 10px', borderRadius: '12px' }}>
+                                        <i className="fas fa-check-circle"></i> ACTIVE GOVERNING RULESET
                                     </span>
-                                    <span style={{ fontWeight: '700', color: '#1E1E2C', fontSize: '0.95rem' }}>
+                                    <span style={{ fontWeight: 700, color: '#1E1E2C', fontSize: '0.95rem', fontFamily: 'Outfit, sans-serif' }}>
                                         {activeRule}
                                     </span>
                                 </div>
-                                <span style={{ fontSize: '0.8rem', color: '#0f766e', fontWeight: '500' }}>
-                                    Governing MPE, Repeatability, Tare & Eccentricity for this test
+                                <span style={{ fontSize: '0.8rem', color: '#D8824C', fontWeight: 600 }}>
+                                    OIML R-76-1:2006 (E) Metrological Tolerance Engine
                                 </span>
                             </div>
                         </div>
@@ -177,11 +208,12 @@ export default function NewTestPage() {
 
                     <div className="form-card">
                         <form onSubmit={handleSubmit}>
-                            <h3 style={{ marginTop: 0, paddingBottom: '10px', borderBottom: '1px solid #E4E7ED', color: '#F29F67' }}>
-                                1. Instrument Specifications
+                            {/* Section 1: Instrument Specifications */}
+                            <h3 style={{ marginTop: 0, paddingBottom: '10px', borderBottom: '1px solid #E4E7ED', color: '#F29F67', fontFamily: 'Outfit, sans-serif', fontSize: '1.15rem' }}>
+                                1. Instrument Specifications & Metrological Parameters
                             </h3>
 
-                            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: '18px', marginTop: '20px' }}>
+                            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(260px, 1fr))', gap: '18px', marginTop: '20px' }}>
                                 <div className="form-group">
                                     <label>Instrument Type</label>
                                     <select name="instrument_type" className="form-input" value={formData.instrument_type} onChange={handleChange} required>
@@ -203,9 +235,9 @@ export default function NewTestPage() {
                                 </div>
 
                                 <div className="form-group">
-                                    <label>Max Capacity</label>
+                                    <label>Max Capacity (Max)</label>
                                     <div className="form-input-group">
-                                        <input type="number" step="any" name="capacity" value={formData.capacity} onChange={handleChange} required />
+                                        <input type="number" step="any" name="capacity" className="form-input" value={formData.capacity} onChange={handleChange} required />
                                         <select name="max_unit" value={formData.max_unit} onChange={handleChange}>
                                             <option value="kg">kg</option>
                                             <option value="g">g</option>
@@ -214,9 +246,9 @@ export default function NewTestPage() {
                                 </div>
 
                                 <div className="form-group">
-                                    <label>Min Capacity</label>
+                                    <label>Min Capacity (Min)</label>
                                     <div className="form-input-group">
-                                        <input type="number" step="any" name="min_capacity" value={formData.min_capacity} onChange={handleChange} />
+                                        <input type="number" step="any" name="min_capacity" className="form-input" value={formData.min_capacity} onChange={handleChange} />
                                         <select name="min_unit" value={formData.min_unit} onChange={handleChange}>
                                             <option value="g">g</option>
                                             <option value="kg">kg</option>
@@ -225,9 +257,9 @@ export default function NewTestPage() {
                                 </div>
 
                                 <div className="form-group">
-                                    <label>Verification Scale (e)</label>
+                                    <label>Verification Scale Interval (e)</label>
                                     <div className="form-input-group">
-                                        <input type="number" step="any" name="e_value" value={formData.e_value} onChange={handleChange} required />
+                                        <input type="number" step="any" name="e_value" className="form-input" value={formData.e_value} onChange={handleChange} required />
                                         <select name="e_unit" value={formData.e_unit} onChange={handleChange}>
                                             <option value="g">g</option>
                                             <option value="mg">mg</option>
@@ -236,97 +268,191 @@ export default function NewTestPage() {
                                 </div>
 
                                 <div className="form-group">
-                                    <label>Machine Make</label>
+                                    <label>Machine Make / Manufacturer</label>
                                     <input type="text" name="manufacturer" className="form-input" value={formData.manufacturer} onChange={handleChange} required />
                                 </div>
 
                                 <div className="form-group">
-                                    <label>Model Name</label>
+                                    <label>Model Name / Series</label>
                                     <input type="text" name="model" className="form-input" value={formData.model} onChange={handleChange} required />
                                 </div>
 
                                 <div className="form-group">
-                                    <label>Serial No.</label>
+                                    <label>Serial Number (S/N)</label>
                                     <input type="text" name="serial_no" className="form-input" value={formData.serial_no} onChange={handleChange} required />
                                 </div>
                             </div>
 
-                            {/* OIML R-76 Administrative Evidence */}
-                            <div style={{ marginTop: '25px', padding: '18px', background: '#f8fafc', border: '1px solid #e2e8f0', borderRadius: '10px' }}>
-                                <h4 style={{ margin: '0 0 6px 0', color: '#1E1E2C', fontSize: '1rem', display: 'flex', alignItems: 'center', gap: '8px' }}>
-                                    <i className="fas fa-folder-open" style={{ color: '#F29F67' }}></i> Instrument & Administrative Evidence
-                                </h4>
-                                <p style={{ margin: '0 0 16px 0', fontSize: '0.85rem', color: '#64748b' }}>
-                                    Supporting Evidence — Attach relevant photographs and documents for the instrument.
-                                </p>
+                            {/* Section 2: ENHANCED Instrument & Administrative Evidence Uploads */}
+                            <div style={{ marginTop: '28px', padding: '22px', background: '#F8FAFC', border: '1.5px solid #E2E8F0', borderRadius: '12px' }}>
+                                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '16px', flexWrap: 'wrap', gap: '8px' }}>
+                                    <div>
+                                        <h4 style={{ margin: 0, color: '#1E1E2C', fontSize: '1.05rem', fontFamily: 'Outfit, sans-serif', fontWeight: 600, display: 'flex', alignItems: 'center', gap: '8px' }}>
+                                            <i className="fas fa-camera-retro" style={{ color: '#F29F67' }}></i> Instrument & Administrative Evidence Uploads
+                                        </h4>
+                                        <p style={{ margin: '4px 0 0 0', fontSize: '0.85rem', color: '#64748b' }}>
+                                            Attach verified photographs & technical compliance documents required for certification trail.
+                                        </p>
+                                    </div>
+                                    <span style={{ background: '#ECFDF5', color: '#047857', border: '1px solid #A7F3D0', padding: '4px 10px', borderRadius: '12px', fontSize: '0.75rem', fontWeight: 700 }}>
+                                        <i className="fas fa-shield-alt"></i> OIML R-76 §A.3 Evidence Vault
+                                    </span>
+                                </div>
 
-                                <div style={{ marginBottom: '16px' }}>
-                                    <label style={{ fontWeight: 600, fontSize: '0.88rem', color: '#334155', marginBottom: '8px', display: 'block' }}>
-                                        <i className="fas fa-camera" style={{ color: '#F29F67' }}></i> Instrument Photographs
+                                {/* Photographed Evidence Upload Cards with Instant Live Thumbnails */}
+                                <div style={{ marginBottom: '20px' }}>
+                                    <label style={{ fontWeight: 700, fontSize: '0.85rem', color: '#334155', textTransform: 'uppercase', letterSpacing: '0.5px', marginBottom: '12px', display: 'block' }}>
+                                        <i className="fas fa-images" style={{ color: '#F29F67', marginRight: '6px' }}></i>
+                                        1. Instrument Photographs (Visual Proof)
                                     </label>
-                                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '12px' }}>
-                                        <div>
-                                            <span style={{ fontSize: '0.78rem', color: '#64748b' }}>Front View</span>
-                                            <input type="file" accept="image/*" className="form-input" style={{ padding: '6px' }} onChange={(e) => handleFileChange(e, 'photo_front')} />
+
+                                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))', gap: '16px' }}>
+                                        
+                                        {/* Front View Card */}
+                                        <div style={{ background: 'white', border: '1px solid #CBD5E1', borderRadius: '10px', padding: '14px', position: 'relative' }}>
+                                            <div style={{ fontSize: '0.82rem', fontWeight: 700, color: '#1e293b', marginBottom: '8px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                                                <span>Front View Photo</span>
+                                                {previews.photo_front && <span style={{ color: '#10B981', fontSize: '0.75rem' }}><i className="fas fa-check-circle"></i> Uploaded</span>}
+                                            </div>
+
+                                            {previews.photo_front ? (
+                                                <div style={{ position: 'relative', height: '120px', borderRadius: '8px', overflow: 'hidden', border: '1px solid #E2E8F0' }}>
+                                                    <img src={previews.photo_front} alt="Front View" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                                                    <button type="button" onClick={() => removePhoto('photo_front')} style={{ position: 'absolute', top: '6px', right: '6px', background: 'rgba(239, 68, 68, 0.9)', color: 'white', border: 'none', borderRadius: '50%', width: '24px', height: '24px', cursor: 'pointer', fontSize: '0.8rem' }}>&times;</button>
+                                                </div>
+                                            ) : (
+                                                <label style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: '18px 12px', background: '#FCFBF7', border: '1.5px dashed #CBD5E1', borderRadius: '8px', cursor: 'pointer', transition: 'all 0.2s' }}>
+                                                    <i className="fas fa-cloud-upload-alt" style={{ fontSize: '1.4rem', color: '#F29F67', marginBottom: '6px' }}></i>
+                                                    <span style={{ fontSize: '0.78rem', color: '#475569', fontWeight: 600 }}>Select Front View Photo</span>
+                                                    <span style={{ fontSize: '0.7rem', color: '#94a3b8' }}>PNG, JPG or WEBP</span>
+                                                    <input type="file" accept="image/*" style={{ display: 'none' }} onChange={(e) => handleFileChange(e, 'photo_front')} />
+                                                </label>
+                                            )}
                                         </div>
-                                        <div>
-                                            <span style={{ fontSize: '0.78rem', color: '#64748b' }}>Nameplate / Markings</span>
-                                            <input type="file" accept="image/*" className="form-input" style={{ padding: '6px' }} onChange={(e) => handleFileChange(e, 'photo_nameplate')} />
+
+                                        {/* Nameplate Card */}
+                                        <div style={{ background: 'white', border: '1px solid #CBD5E1', borderRadius: '10px', padding: '14px', position: 'relative' }}>
+                                            <div style={{ fontSize: '0.82rem', fontWeight: 700, color: '#1e293b', marginBottom: '8px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                                                <span>Nameplate / Markings</span>
+                                                {previews.photo_nameplate && <span style={{ color: '#10B981', fontSize: '0.75rem' }}><i className="fas fa-check-circle"></i> Uploaded</span>}
+                                            </div>
+
+                                            {previews.photo_nameplate ? (
+                                                <div style={{ position: 'relative', height: '120px', borderRadius: '8px', overflow: 'hidden', border: '1px solid #E2E8F0' }}>
+                                                    <img src={previews.photo_nameplate} alt="Nameplate" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                                                    <button type="button" onClick={() => removePhoto('photo_nameplate')} style={{ position: 'absolute', top: '6px', right: '6px', background: 'rgba(239, 68, 68, 0.9)', color: 'white', border: 'none', borderRadius: '50%', width: '24px', height: '24px', cursor: 'pointer', fontSize: '0.8rem' }}>&times;</button>
+                                                </div>
+                                            ) : (
+                                                <label style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: '18px 12px', background: '#FCFBF7', border: '1.5px dashed #CBD5E1', borderRadius: '8px', cursor: 'pointer', transition: 'all 0.2s' }}>
+                                                    <i className="fas fa-id-card" style={{ fontSize: '1.4rem', color: '#F29F67', marginBottom: '6px' }}></i>
+                                                    <span style={{ fontSize: '0.78rem', color: '#475569', fontWeight: 600 }}>Select Nameplate Photo</span>
+                                                    <span style={{ fontSize: '0.7rem', color: '#94a3b8' }}>Shows Max, e, Serial No</span>
+                                                    <input type="file" accept="image/*" style={{ display: 'none' }} onChange={(e) => handleFileChange(e, 'photo_nameplate')} />
+                                                </label>
+                                            )}
                                         </div>
-                                        <div>
-                                            <span style={{ fontSize: '0.78rem', color: '#64748b' }}>Rear / Side View</span>
-                                            <input type="file" accept="image/*" className="form-input" style={{ padding: '6px' }} onChange={(e) => handleFileChange(e, 'photo_rear_side')} />
+
+                                        {/* Rear / Side View Card */}
+                                        <div style={{ background: 'white', border: '1px solid #CBD5E1', borderRadius: '10px', padding: '14px', position: 'relative' }}>
+                                            <div style={{ fontSize: '0.82rem', fontWeight: 700, color: '#1e293b', marginBottom: '8px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                                                <span>Rear / Side View</span>
+                                                {previews.photo_rear_side && <span style={{ color: '#10B981', fontSize: '0.75rem' }}><i className="fas fa-check-circle"></i> Uploaded</span>}
+                                            </div>
+
+                                            {previews.photo_rear_side ? (
+                                                <div style={{ position: 'relative', height: '120px', borderRadius: '8px', overflow: 'hidden', border: '1px solid #E2E8F0' }}>
+                                                    <img src={previews.photo_rear_side} alt="Rear/Side View" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                                                    <button type="button" onClick={() => removePhoto('photo_rear_side')} style={{ position: 'absolute', top: '6px', right: '6px', background: 'rgba(239, 68, 68, 0.9)', color: 'white', border: 'none', borderRadius: '50%', width: '24px', height: '24px', cursor: 'pointer', fontSize: '0.8rem' }}>&times;</button>
+                                                </div>
+                                            ) : (
+                                                <label style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: '18px 12px', background: '#FCFBF7', border: '1.5px dashed #CBD5E1', borderRadius: '8px', cursor: 'pointer', transition: 'all 0.2s' }}>
+                                                    <i className="fas fa-camera" style={{ fontSize: '1.4rem', color: '#F29F67', marginBottom: '6px' }}></i>
+                                                    <span style={{ fontSize: '0.78rem', color: '#475569', fontWeight: 600 }}>Select Rear/Side Photo</span>
+                                                    <span style={{ fontSize: '0.7rem', color: '#94a3b8' }}>Seals & Connection Ports</span>
+                                                    <input type="file" accept="image/*" style={{ display: 'none' }} onChange={(e) => handleFileChange(e, 'photo_rear_side')} />
+                                                </label>
+                                            )}
                                         </div>
+
                                     </div>
                                 </div>
 
+                                {/* Supporting Technical Documents Dropzone Cards */}
                                 <div>
-                                    <label style={{ fontWeight: 600, fontSize: '0.88rem', color: '#334155', marginBottom: '8px', display: 'block' }}>
-                                        <i className="fas fa-file-pdf" style={{ color: '#F29F67' }}></i> Supporting Documents
+                                    <label style={{ fontWeight: 700, fontSize: '0.85rem', color: '#334155', textTransform: 'uppercase', letterSpacing: '0.5px', marginBottom: '12px', display: 'block' }}>
+                                        <i className="fas fa-file-contract" style={{ color: '#3B8FF3', marginRight: '6px' }}></i>
+                                        2. Supporting Compliance Documents
                                     </label>
-                                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '12px' }}>
-                                        <div>
-                                            <span style={{ fontSize: '0.78rem', color: '#64748b' }}>Technical Spec</span>
-                                            <input type="file" accept=".pdf,.doc,.docx" className="form-input" style={{ padding: '6px' }} onChange={(e) => handleFileChange(e, 'doc_tech_spec')} />
+
+                                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))', gap: '16px' }}>
+                                        
+                                        {/* Technical Spec */}
+                                        <div style={{ background: 'white', border: '1px solid #CBD5E1', borderRadius: '10px', padding: '14px' }}>
+                                            <div style={{ fontSize: '0.82rem', fontWeight: 700, color: '#1e293b', marginBottom: '6px' }}>Technical Specification Sheet</div>
+                                            <label style={{ display: 'block', cursor: 'pointer' }}>
+                                                <div style={{ padding: '10px 12px', background: '#F8FAFC', border: '1px solid #E2E8F0', borderRadius: '6px', fontSize: '0.8rem', color: files.doc_tech_spec ? '#047857' : '#64748b', fontWeight: 600, truncate: 'true' }}>
+                                                    <i className={files.doc_tech_spec ? "fas fa-file-pdf text-emerald-600" : "fas fa-paperclip"} style={{ marginRight: '6px' }}></i>
+                                                    {files.doc_tech_spec ? files.doc_tech_spec.name : "Attach Tech Spec (PDF)"}
+                                                </div>
+                                                <input type="file" accept=".pdf,.doc,.docx" style={{ display: 'none' }} onChange={(e) => handleFileChange(e, 'doc_tech_spec')} />
+                                            </label>
                                         </div>
-                                        <div>
-                                            <span style={{ fontSize: '0.78rem', color: '#64748b' }}>Operating Manual</span>
-                                            <input type="file" accept=".pdf,.doc,.docx" className="form-input" style={{ padding: '6px' }} onChange={(e) => handleFileChange(e, 'doc_operating_manual')} />
+
+                                        {/* Operating Manual */}
+                                        <div style={{ background: 'white', border: '1px solid #CBD5E1', borderRadius: '10px', padding: '14px' }}>
+                                            <div style={{ fontSize: '0.82rem', fontWeight: 700, color: '#1e293b', marginBottom: '6px' }}>Operating & Instruction Manual</div>
+                                            <label style={{ display: 'block', cursor: 'pointer' }}>
+                                                <div style={{ padding: '10px 12px', background: '#F8FAFC', border: '1px solid #E2E8F0', borderRadius: '6px', fontSize: '0.8rem', color: files.doc_operating_manual ? '#047857' : '#64748b', fontWeight: 600 }}>
+                                                    <i className={files.doc_operating_manual ? "fas fa-file-pdf text-emerald-600" : "fas fa-paperclip"} style={{ marginRight: '6px' }}></i>
+                                                    {files.doc_operating_manual ? files.doc_operating_manual.name : "Attach Manual (PDF)"}
+                                                </div>
+                                                <input type="file" accept=".pdf,.doc,.docx" style={{ display: 'none' }} onChange={(e) => handleFileChange(e, 'doc_operating_manual')} />
+                                            </label>
                                         </div>
-                                        <div>
-                                            <span style={{ fontSize: '0.78rem', color: '#64748b' }}>Drawing</span>
-                                            <input type="file" accept=".pdf,.doc,.docx,image/*" className="form-input" style={{ padding: '6px' }} onChange={(e) => handleFileChange(e, 'doc_drawing')} />
+
+                                        {/* Drawing */}
+                                        <div style={{ background: 'white', border: '1px solid #CBD5E1', borderRadius: '10px', padding: '14px' }}>
+                                            <div style={{ fontSize: '0.82rem', fontWeight: 700, color: '#1e293b', marginBottom: '6px' }}>Dimensional Drawing / Schematic</div>
+                                            <label style={{ display: 'block', cursor: 'pointer' }}>
+                                                <div style={{ padding: '10px 12px', background: '#F8FAFC', border: '1px solid #E2E8F0', borderRadius: '6px', fontSize: '0.8rem', color: files.doc_drawing ? '#047857' : '#64748b', fontWeight: 600 }}>
+                                                    <i className={files.doc_drawing ? "fas fa-file-pdf text-emerald-600" : "fas fa-paperclip"} style={{ marginRight: '6px' }}></i>
+                                                    {files.doc_drawing ? files.doc_drawing.name : "Attach Drawing / Schematic"}
+                                                </div>
+                                                <input type="file" accept=".pdf,.doc,.docx,image/*" style={{ display: 'none' }} onChange={(e) => handleFileChange(e, 'doc_drawing')} />
+                                            </label>
                                         </div>
+
                                     </div>
                                 </div>
                             </div>
 
-                            <h3 style={{ marginTop: '30px', marginBottom: '20px', borderBottom: '1px solid #eee', paddingBottom: '10px', color: '#F29F67' }}>
-                                2. Laboratory Details
+                            {/* Section 3: Laboratory & Environmental Details */}
+                            <h3 style={{ marginTop: '30px', marginBottom: '16px', borderBottom: '1px solid #E4E7ED', paddingBottom: '10px', color: '#F29F67', fontFamily: 'Outfit, sans-serif', fontSize: '1.15rem' }}>
+                                3. Laboratory & Environmental Test Conditions
                             </h3>
 
                             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(250px, 1fr))', gap: '18px' }}>
                                 <div className="form-group">
-                                    <label>Laboratory Name</label>
+                                    <label>Testing Laboratory Name</label>
                                     <input type="text" name="lab_name" className="form-input" value={formData.lab_name} onChange={handleChange} required />
                                 </div>
                                 <div className="form-group">
-                                    <label>Location / State</label>
+                                    <label>Laboratory Location / State</label>
                                     <input type="text" name="lab_location" className="form-input" value={formData.lab_location} onChange={handleChange} required />
                                 </div>
                                 <div className="form-group">
-                                    <label>Testing Environment</label>
+                                    <label>Testing Ambient Conditions</label>
                                     <div style={{ display: 'flex', gap: '8px' }}>
-                                        <input type="number" name="temperature" placeholder="°C" className="form-input" value={formData.temperature} onChange={handleChange} required />
-                                        <input type="number" name="humidity" placeholder="%" className="form-input" value={formData.humidity} onChange={handleChange} required />
-                                        <input type="number" name="voltage" placeholder="V" className="form-input" value={formData.voltage} onChange={handleChange} required />
+                                        <input type="number" name="temperature" placeholder="Temp (°C)" className="form-input" value={formData.temperature} onChange={handleChange} required />
+                                        <input type="number" name="humidity" placeholder="Humidity (%)" className="form-input" value={formData.humidity} onChange={handleChange} required />
+                                        <input type="number" name="voltage" placeholder="Supply (V)" className="form-input" value={formData.voltage} onChange={handleChange} required />
                                     </div>
                                 </div>
                             </div>
 
-                            <div style={{ marginTop: '30px', textAlign: 'right' }}>
-                                <button type="submit" className="btn" style={{ padding: '12px 32px' }}>
-                                    Continue to Test Planner &rarr;
+                            <div style={{ marginTop: '32px', textAlign: 'right' }}>
+                                <button type="submit" className="btn" style={{ padding: '12px 32px', fontSize: '0.95rem' }}>
+                                    Generate Test Plan &rarr;
                                 </button>
                             </div>
                         </form>
