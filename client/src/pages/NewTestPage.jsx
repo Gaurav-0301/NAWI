@@ -12,20 +12,20 @@ export default function NewTestPage() {
     const [formData, setFormData] = useState({
         instrument_type: "platform",
         Class_value: "class III",
-        capacity: "1000",
+        capacity: "",
         max_unit: "kg",
-        min_capacity: "20",
+        min_capacity: "",
         min_unit: "g",
-        e_value: "10",
+        e_value: "",
         e_unit: "g",
-        manufacturer: "Mettler Toledo",
-        model: "IND570",
-        serial_no: "SN-987654321",
-        lab_name: "National Metrology & Verification Lab",
-        lab_location: "New Delhi, Delhi",
-        temperature: "20",
-        humidity: "50",
-        voltage: "220"
+        manufacturer: "",
+        model: "",
+        serial_no: "",
+        lab_name: "",
+        lab_location: "",
+        temperature: "",
+        humidity: "",
+        voltage: ""
     });
 
     const [files, setFiles] = useState({
@@ -92,15 +92,28 @@ export default function NewTestPage() {
     const handleSubmit = async (e) => {
         e.preventDefault();
 
-        const maxKg = Number(formData.capacity);
-        const eG = Number(formData.e_value);
+        const {
+            capacity, min_capacity, e_value, manufacturer, model, serial_no,
+            lab_name, lab_location, temperature, humidity, voltage
+        } = formData;
 
-        if (!maxKg || !eG) {
-            alert("Please fill in Max Capacity and Verification Interval (e).");
+        if (
+            !capacity || !min_capacity || !e_value || !manufacturer || !model ||
+            !serial_no || !lab_name || !lab_location || !temperature || !humidity || !voltage
+        ) {
+            alert("Please fill in all required instrument specifications and laboratory conditions before proceeding.");
             return;
         }
 
-        const minG = Number(formData.min_capacity) > 0 ? Number(formData.min_capacity) : (20 * eG);
+        const maxKg = Number(capacity);
+        const eG = Number(e_value);
+
+        if (isNaN(maxKg) || maxKg <= 0 || isNaN(eG) || eG <= 0) {
+            alert("Please enter valid positive numbers for Max Capacity and Verification Interval (e).");
+            return;
+        }
+
+        const minG = Number(min_capacity) > 0 ? Number(min_capacity) : (20 * eG);
 
         const photoFrontBase64 = await readFileAsBase64(files.photo_front);
         const photoNameplateBase64 = await readFileAsBase64(files.photo_nameplate);
@@ -237,7 +250,7 @@ export default function NewTestPage() {
                                 <div className="form-group">
                                     <label>Max Capacity (Max)</label>
                                     <div className="form-input-group">
-                                        <input type="number" step="any" name="capacity" className="form-input" value={formData.capacity} onChange={handleChange} required />
+                                        <input type="number" step="any" name="capacity" placeholder="e.g. 1000" className="form-input" value={formData.capacity} onChange={handleChange} required />
                                         <select name="max_unit" value={formData.max_unit} onChange={handleChange}>
                                             <option value="kg">kg</option>
                                             <option value="g">g</option>
@@ -248,7 +261,7 @@ export default function NewTestPage() {
                                 <div className="form-group">
                                     <label>Min Capacity (Min)</label>
                                     <div className="form-input-group">
-                                        <input type="number" step="any" name="min_capacity" className="form-input" value={formData.min_capacity} onChange={handleChange} />
+                                        <input type="number" step="any" name="min_capacity" placeholder="e.g. 20" className="form-input" value={formData.min_capacity} onChange={handleChange} required />
                                         <select name="min_unit" value={formData.min_unit} onChange={handleChange}>
                                             <option value="g">g</option>
                                             <option value="kg">kg</option>
@@ -259,7 +272,7 @@ export default function NewTestPage() {
                                 <div className="form-group">
                                     <label>Verification Scale Interval (e)</label>
                                     <div className="form-input-group">
-                                        <input type="number" step="any" name="e_value" className="form-input" value={formData.e_value} onChange={handleChange} required />
+                                        <input type="number" step="any" name="e_value" placeholder="e.g. 10" className="form-input" value={formData.e_value} onChange={handleChange} required />
                                         <select name="e_unit" value={formData.e_unit} onChange={handleChange}>
                                             <option value="g">g</option>
                                             <option value="mg">mg</option>
@@ -269,17 +282,17 @@ export default function NewTestPage() {
 
                                 <div className="form-group">
                                     <label>Machine Make / Manufacturer</label>
-                                    <input type="text" name="manufacturer" className="form-input" value={formData.manufacturer} onChange={handleChange} required />
+                                    <input type="text" name="manufacturer" placeholder="e.g. Mettler Toledo" className="form-input" value={formData.manufacturer} onChange={handleChange} required />
                                 </div>
 
                                 <div className="form-group">
                                     <label>Model Name / Series</label>
-                                    <input type="text" name="model" className="form-input" value={formData.model} onChange={handleChange} required />
+                                    <input type="text" name="model" placeholder="e.g. IND570" className="form-input" value={formData.model} onChange={handleChange} required />
                                 </div>
 
                                 <div className="form-group">
                                     <label>Serial Number (S/N)</label>
-                                    <input type="text" name="serial_no" className="form-input" value={formData.serial_no} onChange={handleChange} required />
+                                    <input type="text" name="serial_no" placeholder="e.g. SN-987654321" className="form-input" value={formData.serial_no} onChange={handleChange} required />
                                 </div>
                             </div>
 
@@ -434,11 +447,11 @@ export default function NewTestPage() {
                             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(250px, 1fr))', gap: '18px' }}>
                                 <div className="form-group">
                                     <label>Testing Laboratory Name</label>
-                                    <input type="text" name="lab_name" className="form-input" value={formData.lab_name} onChange={handleChange} required />
+                                    <input type="text" name="lab_name" placeholder="e.g. National Metrology Lab" className="form-input" value={formData.lab_name} onChange={handleChange} required />
                                 </div>
                                 <div className="form-group">
                                     <label>Laboratory Location / State</label>
-                                    <input type="text" name="lab_location" className="form-input" value={formData.lab_location} onChange={handleChange} required />
+                                    <input type="text" name="lab_location" placeholder="e.g. New Delhi, Delhi" className="form-input" value={formData.lab_location} onChange={handleChange} required />
                                 </div>
                                 <div className="form-group">
                                     <label>Testing Ambient Conditions</label>

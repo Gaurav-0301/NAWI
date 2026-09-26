@@ -244,7 +244,55 @@ export default function TestExecutionPage() {
         };
     };
 
+    const validateCurrentTestStep = () => {
+        if (!currentTest) return true;
+        const testId = currentTest.id;
+
+        if (testId === 2) {
+            for (let loadG in weighingReadings) {
+                const item = weighingReadings[loadG] || {};
+                if (item.asc === undefined || item.asc === '' || item.desc === undefined || item.desc === '') {
+                    alert("Please fill in both Ascending and Descending readings for all load points before proceeding.");
+                    return false;
+                }
+            }
+        } else if (testId === 3) {
+            for (let k in repeatabilityReadings) {
+                if (repeatabilityReadings[k] === undefined || repeatabilityReadings[k] === '') {
+                    alert("Please fill in all repeatability test readings before proceeding.");
+                    return false;
+                }
+            }
+        } else if (testId === 4) {
+            const positions = ['front', 'right', 'rear', 'left', 'center'];
+            for (let pos of positions) {
+                if (eccentricityReadings[pos] === undefined || eccentricityReadings[pos] === '') {
+                    alert("Please fill in eccentricity readings for all positions (front, right, rear, left, center) before proceeding.");
+                    return false;
+                }
+            }
+        } else if (testId === 5) {
+            if (zeroReading.indication === undefined || zeroReading.indication === '') {
+                alert("Please fill in the Zero Indication Reading before proceeding.");
+                return false;
+            }
+        } else if (testId === 6) {
+            if (!tareReading.tare_load || !tareReading.net_indication) {
+                alert("Please fill in Tare Load Applied and Net Indication After Tare before proceeding.");
+                return false;
+            }
+        } else if (testId === 8) {
+            if (!tiltReading.ref || !tiltReading.tilt_x || !tiltReading.tilt_y) {
+                alert("Please fill in all Tilt Test observation readings (Level Reference, X-Axis, Y-Axis) before proceeding.");
+                return false;
+            }
+        }
+        return true;
+    };
+
     const handleSaveReport = async () => {
+        if (!validateCurrentTestStep()) return;
+
         setSaving(true);
         try {
             const instData = JSON.parse(localStorage.getItem("InstrumentData") || "{}");
@@ -595,7 +643,11 @@ export default function TestExecutionPage() {
                         ) : (
                             <button
                                 className="btn"
-                                onClick={() => setCurrentIdx(prev => Math.min(testsToRun.length - 1, prev + 1))}
+                                onClick={() => {
+                                    if (validateCurrentTestStep()) {
+                                        setCurrentIdx(prev => Math.min(testsToRun.length - 1, prev + 1));
+                                    }
+                                }}
                             >
                                 Next Test &rarr;
                             </button>
