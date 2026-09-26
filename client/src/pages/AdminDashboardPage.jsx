@@ -69,11 +69,12 @@ export default function AdminDashboardPage() {
 
     const fetchAdminData = () => {
         setLoading(true);
-        cachedFetch(authFetch, '/api/admin/dashboard')
+        authFetch('/api/admin/dashboard')
+            .then(res => res.json())
             .then(data => {
                 if (data && !data.error) setAdminData(data);
             })
-            .catch(err => console.error(err))
+            .catch(err => console.error("Error fetching admin data:", err))
             .finally(() => setLoading(false));
     };
 

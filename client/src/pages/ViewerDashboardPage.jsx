@@ -46,20 +46,22 @@ export default function ViewerDashboardPage() {
     // Fetch Analytics Stats
     const fetchStats = () => {
         setStatsLoading(true);
-        cachedFetch(authFetch, '/api/viewer/stats')
+        authFetch('/api/viewer/stats')
+            .then(res => res.json())
             .then(data => {
                 if (data && !data.error) {
                     setStats(data);
                 }
             })
-            .catch(err => console.error(err))
+            .catch(err => console.error("Error fetching viewer stats:", err))
             .finally(() => setStatsLoading(false));
     };
 
     // Fetch Reports by Tab
     const fetchReports = (tab) => {
         setLoading(true);
-        cachedFetch(authFetch, `/api/viewer/reports?tab=${tab}`)
+        authFetch(`/api/viewer/reports?tab=${tab}`)
+            .then(res => res.json())
             .then(data => {
                 if (Array.isArray(data)) {
                     setReports(data);
@@ -67,7 +69,10 @@ export default function ViewerDashboardPage() {
                     setReports([]);
                 }
             })
-            .catch(err => console.error(err))
+            .catch(err => {
+                console.error("Error fetching viewer reports:", err);
+                setReports([]);
+            })
             .finally(() => setLoading(false));
     };
 
