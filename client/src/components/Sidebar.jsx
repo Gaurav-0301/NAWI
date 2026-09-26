@@ -8,7 +8,7 @@ export default function Sidebar() {
     const location = useLocation();
 
     const role = user?.role || 'tester';
-    const username = user?.username || (role === 'admin' ? 'Admin' : 'Nishant');
+    const username = user?.name || user?.username || (role === 'admin' ? 'Admin' : role === 'viewer' ? 'Quality Reviewer' : 'Nishant');
     const hasActiveSession = !!localStorage.getItem('InstrumentData');
 
     const handleBlockedNav = (e, path) => {
@@ -109,7 +109,7 @@ export default function Sidebar() {
                     </div>
                     <div className="truncate">
                         <div className="text-white text-sm font-semibold truncate">{username}</div>
-                        <div className="text-slate-400 text-xs">{role === 'admin' ? 'Administrator' : 'Tester'}</div>
+                        <div className="text-slate-400 text-xs">{role === 'admin' ? 'Administrator' : role === 'viewer' ? 'Quality Reviewer' : 'Tester'}</div>
                     </div>
                 </div>
                 <button 

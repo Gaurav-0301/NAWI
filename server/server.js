@@ -148,7 +148,7 @@ app.post("/api/auth/register", async (req, res) => {
             name: name.trim(),
             email: email.toLowerCase().trim(),
             password,
-            role: role === "admin" ? "admin" : "tester"
+            role: ["admin", "tester", "viewer"].includes(role) ? role : "tester"
         });
 
         const accessToken = generateAccessToken(user);

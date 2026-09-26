@@ -7,46 +7,39 @@ async function seedUsers() {
     try {
         await mongoose.connect(mongoUri);
 
-        // Check if Admin exists
-        const adminExisting = await User.findOne({ email: "admin@schrodingersincident.com" });
-        if (!adminExisting) {
-            await User.create({
+        const usersToSeed = [
+            {
                 name: "Dr. Raman Kumar",
-                email: "[EMAIL_ADDRESS]",
-                password: "admin123", // Hashes automatically via pre-save hook
+                email: "admin@schrodingersincident.com",
+                password: "admin123",
                 role: "admin"
-            });
-            console.log("✅ Seeded Admin User: admin@schrodingersincident.com / admin123");
-        } else {
-            console.log("ℹ️ Admin User already exists.");
-        }
-
-        // Check if Tester exists
-        const testerExisting = await User.findOne({ email: "tester@schrodingersincident.com" });
-        if (!testerExisting) {
-            await User.create({
+            },
+            {
                 name: "Nishant",
                 email: "tester@schrodingersincident.com",
-                password: "tester123", // Hashes automatically via pre-save hook
+                password: "tester123",
                 role: "tester"
-            });
-            console.log("✅ Seeded Tester User: tester@schrodingersincident.com / tester123");
-        } else {
-            console.log("ℹ️ Tester User already exists.");
-        }
-
-        // Check if Viewer exists
-        const viewerExisting = await User.findOne({ email: "viewer@schrodingersincident.com" });
-        if (!viewerExisting) {
-            await User.create({
+            },
+            {
                 name: "Quality Reviewer",
                 email: "viewer@schrodingersincident.com",
-                password: "viewer123", // Hashes automatically via pre-save hook
+                password: "viewer123",
                 role: "viewer"
-            });
-            console.log("✅ Seeded Viewer User: viewer@schrodingersincident.com / viewer123");
-        } else {
-            console.log("ℹ️ Viewer User already exists.");
+            }
+        ];
+
+        for (const u of usersToSeed) {
+            let user = await User.findOne({ email: u.email });
+            if (!user) {
+                await User.create(u);
+                console.log(`✅ Seeded ${u.role} User: ${u.email} / ${u.password}`);
+            } else {
+                user.name = u.name;
+                user.password = u.password; // Triggers pre-save hook to hash password properly
+                user.role = u.role;
+                await user.save();
+                console.log(`🔄 Reset & Updated ${u.role} User: ${u.email} / ${u.password}`);
+            }
         }
 
     } catch (err) {
