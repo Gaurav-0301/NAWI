@@ -105,6 +105,11 @@ export default function NewTestPage() {
             return;
         }
 
+        if (!files.photo_front || !files.photo_nameplate || !files.photo_rear_side || !files.doc_tech_spec) {
+            alert("Please upload all required Instrument Photographs (Front View, Nameplate, Rear/Side View) and Technical Spec Document.");
+            return;
+        }
+
         const maxKg = Number(capacity);
         const eG = Number(e_value);
 
@@ -205,14 +210,14 @@ export default function NewTestPage() {
                         <div style={{ marginTop: '14px', padding: '12px 18px', background: '#FEF0E6', border: '1.5px solid #F29F67', borderRadius: '8px' }}>
                             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: '8px' }}>
                                 <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-                                    <span style={{ background: '#F29F67', color: 'white', fontSize: '0.75rem', fontWeight: 700, padding: '3px 10px', borderRadius: '12px' }}>
+                                    <span style={{ background: '#086e0dff', color: 'white', fontSize: '0.75rem', fontWeight: 700, padding: '3px 10px', borderRadius: '12px' }}>
                                         <i className="fas fa-check-circle"></i> ACTIVE GOVERNING RULESET
                                     </span>
                                     <span style={{ fontWeight: 700, color: '#1E1E2C', fontSize: '0.95rem', fontFamily: 'Outfit, sans-serif' }}>
                                         {activeRule}
                                     </span>
                                 </div>
-                                <span style={{ fontSize: '0.8rem', color: '#D8824C', fontWeight: 600 }}>
+                                <span style={{ fontSize: '0.8rem', color: '#000000ff', fontWeight: 600 }}>
                                     OIML R-76-1:2006 (E) Metrological Tolerance Engine
                                 </span>
                             </div>
@@ -324,8 +329,12 @@ export default function NewTestPage() {
                                         {/* Front View Card */}
                                         <div style={{ background: 'white', border: '1px solid #CBD5E1', borderRadius: '10px', padding: '14px', position: 'relative' }}>
                                             <div style={{ fontSize: '0.82rem', fontWeight: 700, color: '#1e293b', marginBottom: '8px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                                                <span>Front View Photo</span>
-                                                {previews.photo_front && <span style={{ color: '#10B981', fontSize: '0.75rem' }}><i className="fas fa-check-circle"></i> Uploaded</span>}
+                                                <span>Front View Photo <span style={{ color: '#ef4444', fontWeight: 700 }}>*</span></span>
+                                                {previews.photo_front ? (
+                                                    <span style={{ color: '#10B981', fontSize: '0.75rem' }}><i className="fas fa-check-circle"></i> Uploaded</span>
+                                                ) : (
+                                                    <span style={{ color: '#ef4444', fontSize: '0.72rem', fontWeight: 700 }}>Required</span>
+                                                )}
                                             </div>
 
                                             {previews.photo_front ? (
@@ -346,8 +355,12 @@ export default function NewTestPage() {
                                         {/* Nameplate Card */}
                                         <div style={{ background: 'white', border: '1px solid #CBD5E1', borderRadius: '10px', padding: '14px', position: 'relative' }}>
                                             <div style={{ fontSize: '0.82rem', fontWeight: 700, color: '#1e293b', marginBottom: '8px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                                                <span>Nameplate / Markings</span>
-                                                {previews.photo_nameplate && <span style={{ color: '#10B981', fontSize: '0.75rem' }}><i className="fas fa-check-circle"></i> Uploaded</span>}
+                                                <span>Nameplate / Markings <span style={{ color: '#ef4444', fontWeight: 700 }}>*</span></span>
+                                                {previews.photo_nameplate ? (
+                                                    <span style={{ color: '#10B981', fontSize: '0.75rem' }}><i className="fas fa-check-circle"></i> Uploaded</span>
+                                                ) : (
+                                                    <span style={{ color: '#ef4444', fontSize: '0.72rem', fontWeight: 700 }}>Required</span>
+                                                )}
                                             </div>
 
                                             {previews.photo_nameplate ? (
@@ -368,8 +381,12 @@ export default function NewTestPage() {
                                         {/* Rear / Side View Card */}
                                         <div style={{ background: 'white', border: '1px solid #CBD5E1', borderRadius: '10px', padding: '14px', position: 'relative' }}>
                                             <div style={{ fontSize: '0.82rem', fontWeight: 700, color: '#1e293b', marginBottom: '8px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                                                <span>Rear / Side View</span>
-                                                {previews.photo_rear_side && <span style={{ color: '#10B981', fontSize: '0.75rem' }}><i className="fas fa-check-circle"></i> Uploaded</span>}
+                                                <span>Rear / Side View <span style={{ color: '#ef4444', fontWeight: 700 }}>*</span></span>
+                                                {previews.photo_rear_side ? (
+                                                    <span style={{ color: '#10B981', fontSize: '0.75rem' }}><i className="fas fa-check-circle"></i> Uploaded</span>
+                                                ) : (
+                                                    <span style={{ color: '#ef4444', fontSize: '0.72rem', fontWeight: 700 }}>Required</span>
+                                                )}
                                             </div>
 
                                             {previews.photo_rear_side ? (
@@ -401,11 +418,13 @@ export default function NewTestPage() {
                                         
                                         {/* Technical Spec */}
                                         <div style={{ background: 'white', border: '1px solid #CBD5E1', borderRadius: '10px', padding: '14px' }}>
-                                            <div style={{ fontSize: '0.82rem', fontWeight: 700, color: '#1e293b', marginBottom: '6px' }}>Technical Specification Sheet</div>
+                                            <div style={{ fontSize: '0.82rem', fontWeight: 700, color: '#1e293b', marginBottom: '6px', display: 'flex', justifyContent: 'space-between' }}>
+                                                <span>Technical Specification Sheet <span style={{ color: '#ef4444', fontWeight: 700 }}>*</span></span>
+                                            </div>
                                             <label style={{ display: 'block', cursor: 'pointer' }}>
-                                                <div style={{ padding: '10px 12px', background: '#F8FAFC', border: '1px solid #E2E8F0', borderRadius: '6px', fontSize: '0.8rem', color: files.doc_tech_spec ? '#047857' : '#64748b', fontWeight: 600, truncate: 'true' }}>
+                                                <div style={{ padding: '10px 12px', background: '#F8FAFC', border: '1px solid #E2E8F0', borderRadius: '6px', fontSize: '0.8rem', color: files.doc_tech_spec ? '#047857' : '#64748b', fontWeight: 600 }}>
                                                     <i className={files.doc_tech_spec ? "fas fa-file-pdf text-emerald-600" : "fas fa-paperclip"} style={{ marginRight: '6px' }}></i>
-                                                    {files.doc_tech_spec ? files.doc_tech_spec.name : "Attach Tech Spec (PDF)"}
+                                                    {files.doc_tech_spec ? files.doc_tech_spec.name : "Attach Tech Spec (PDF) *"}
                                                 </div>
                                                 <input type="file" accept=".pdf,.doc,.docx" style={{ display: 'none' }} onChange={(e) => handleFileChange(e, 'doc_tech_spec')} />
                                             </label>
