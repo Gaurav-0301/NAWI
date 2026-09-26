@@ -28,9 +28,9 @@ export default function TestExecutionPage() {
     const [eccentricityReadings, setEccentricityReadings] = useState({
         front: '', right: '', rear: '', left: '', center: ''
     });
-    const [zeroReading, setZeroReading] = useState({ indication: '0.000' });
-    const [tareReading, setTareReading] = useState({ tare_load: '10.0', net_indication: '10.000' });
-    const [tiltReading, setTiltReading] = useState({ ref: '10.000', tilt_x: '10.000', tilt_y: '10.000' });
+    const [zeroReading, setZeroReading] = useState({ indication: '' });
+    const [tareReading, setTareReading] = useState({ tare_load: '', net_indication: '' });
+    const [tiltReading, setTiltReading] = useState({ ref: '', tilt_x: '', tilt_y: '' });
 
     // Evidence Register
     const [evidenceList, setEvidenceList] = useState([]);
@@ -50,37 +50,34 @@ export default function TestExecutionPage() {
         }
         setTestsToRun(req);
 
-        // Pre-fill weighing test points
+        // Initialize weighing test points with empty input values
         const test2 = req.find(t => t.id === 2);
         if (test2 && test2.testPoints) {
             const initial = {};
             test2.testPoints.filter(p => p > 0).forEach(p => {
-                const loadKg = p / 1000;
                 initial[p] = {
-                    asc: loadKg.toString(),
-                    desc: loadKg.toString()
+                    asc: '',
+                    desc: ''
                 };
             });
             setWeighingReadings(initial);
         }
 
-        // Pre-fill repeatability
+        // Initialize repeatability with empty input values
         const test3 = req.find(t => t.id === 3);
         if (test3) {
-            const loadKg = (test3.load / 1000).toString();
             const initRep = {};
             for (let i = 1; i <= test3.readings; i++) {
-                initRep[`Value_${i}`] = loadKg;
+                initRep[`Value_${i}`] = '';
             }
             setRepeatabilityReadings(initRep);
         }
 
-        // Pre-fill eccentricity load
+        // Initialize eccentricity load with empty input values
         const test4 = req.find(t => t.id === 4);
         if (test4) {
-            const eccKg = (test4.load / 1000).toString();
             setEccentricityReadings({
-                front: eccKg, right: eccKg, rear: eccKg, left: eccKg, center: eccKg
+                front: '', right: '', rear: '', left: '', center: ''
             });
         }
     }, [navigate]);
@@ -98,10 +95,10 @@ export default function TestExecutionPage() {
         for (let loadG in weighingReadings) {
             const loadGNum = Number(loadG);
             const loadKg = loadGNum / 1000;
-            const item = weighingReadings[loadG];
+            const item = weighingReadings[loadG] || {};
 
-            const ascReading = Number(item.asc || loadKg);
-            const descReading = Number(item.desc || loadKg);
+            const ascReading = (item.asc !== undefined && item.asc !== '') ? Number(item.asc) : loadKg;
+            const descReading = (item.desc !== undefined && item.desc !== '') ? Number(item.desc) : loadKg;
 
             const ascErrorKg = ascReading - loadKg;
             const descErrorKg = descReading - loadKg;
@@ -134,11 +131,13 @@ export default function TestExecutionPage() {
         const test3 = testsToRun.find(t => t.id === 3);
         const testLoadKg = test3 ? (test3.load / 1000) : (maxKg / 2);
 
-        const vals = Object.values(repeatabilityReadings).map(Number).filter(v => !isNaN(v));
-        if (vals.length === 0) return {};
+        const vals = Object.values(repeatabilityReadings)
+            .filter(v => v !== undefined && v !== '')
+            .map(Number)
+            .filter(v => !isNaN(v));
 
-        const maxVal = Math.max(...vals);
-        const minVal = Math.min(...vals);
+        const maxVal = vals.length > 0 ? Math.max(...vals) : testLoadKg;
+        const minVal = vals.length > 0 ? Math.min(...vals) : testLoadKg;
         const rangeKg = maxVal - minVal;
 
         const repMaxDiffE = (activeRules?.repeatability?.max_diff_e) ? activeRules.repeatability.max_diff_e : 1.0;
@@ -169,7 +168,8 @@ export default function TestExecutionPage() {
         let overallPass = true;
 
         for (let pos in eccentricityReadings) {
-            const ind = Number(eccentricityReadings[pos] || eccLoadKg);
+            const rawVal = eccentricityReadings[pos];
+            const ind = (rawVal !== undefined && rawVal !== '') ? Number(rawVal) : eccLoadKg;
             const err = ind - eccLoadKg;
             const pass = Math.abs(err) <= limitKg;
             if (!pass) overallPass = false;
@@ -190,7 +190,8 @@ export default function TestExecutionPage() {
     };
 
     const calculateZeroResults = () => {
-        const ind = Number(zeroReading.indication || 0);
+        const rawVal = zeroReading.indication;
+        const ind = (rawVal !== undefined && rawVal !== '') ? Number(rawVal) : 0;
         const errG = ind * 1000;
         const limitG = 0.25 * eG;
         const pass = Math.abs(errG) <= limitG;
@@ -204,8 +205,10 @@ export default function TestExecutionPage() {
     };
 
     const calculateTareResults = () => {
-        const tareLoad = Number(tareReading.tare_load || 10);
-        const netInd = Number(tareReading.net_indication || 10);
+        const rawTare = tareReading.tare_load;
+        const rawNet = tareReading.net_indication;
+        const tareLoad = (rawTare !== undefined && rawTare !== '') ? Number(rawTare) : 10;
+        const netInd = (rawNet !== undefined && rawNet !== '') ? Number(rawNet) : 10;
         const errG = (netInd - tareLoad) * 1000;
         const mpeG = getMPE(tareLoad * 1000, eG, cls);
         const pass = Math.abs(errG) <= mpeG;
@@ -219,9 +222,12 @@ export default function TestExecutionPage() {
     };
 
     const calculateTiltResults = () => {
-        const ref = Number(tiltReading.ref || 10);
-        const x = Number(tiltReading.tilt_x || 10);
-        const y = Number(tiltReading.tilt_y || 10);
+        const rawRef = tiltReading.ref;
+        const rawX = tiltReading.tilt_x;
+        const rawY = tiltReading.tilt_y;
+        const ref = (rawRef !== undefined && rawRef !== '') ? Number(rawRef) : 10;
+        const x = (rawX !== undefined && rawX !== '') ? Number(rawX) : 10;
+        const y = (rawY !== undefined && rawY !== '') ? Number(rawY) : 10;
 
         const xErrG = Math.abs(x - ref) * 1000;
         const yErrG = Math.abs(y - ref) * 1000;
@@ -361,22 +367,17 @@ export default function TestExecutionPage() {
                         {/* TEST 2: Weighing Performance */}
                         {currentTest.id === 2 && (
                             <div>
-                                <h4 style={{ color: '#F29F67' }}>Ascending & Descending Readings</h4>
+                                <h4 style={{ color: '#F29F67', marginBottom: '16px' }}>Ascending & Descending Readings</h4>
                                 <table>
                                     <thead>
                                         <tr>
-                                            <th>Load</th>
-                                            <th>Ascending (kg)</th>
-                                            <th>Descending (kg)</th>
-                                            <th>Error Asc (g)</th>
-                                            <th>Error Desc (g)</th>
-                                            <th>MPE Limit</th>
-                                            <th>Result</th>
+                                            <th>LOAD</th>
+                                            <th>ASCENDING (KG)</th>
+                                            <th>DESCENDING (KG)</th>
                                         </tr>
                                     </thead>
                                     <tbody>
                                         {Object.keys(weighingReadings).map(loadG => {
-                                            const res = calculateWeighingResults()[loadG] || {};
                                             const loadKg = Number(loadG) / 1000;
                                             return (
                                                 <tr key={loadG}>
@@ -385,7 +386,8 @@ export default function TestExecutionPage() {
                                                         <input
                                                             type="number"
                                                             step="any"
-                                                            style={{ width: '100px', padding: '6px' }}
+                                                            placeholder="Enter observed reading"
+                                                            style={{ width: '180px', padding: '8px 12px', borderRadius: '6px', border: '1px solid #cbd5e1' }}
                                                             value={weighingReadings[loadG].asc}
                                                             onChange={e => {
                                                                 const val = e.target.value;
@@ -400,7 +402,8 @@ export default function TestExecutionPage() {
                                                         <input
                                                             type="number"
                                                             step="any"
-                                                            style={{ width: '100px', padding: '6px' }}
+                                                            placeholder="Enter observed reading"
+                                                            style={{ width: '180px', padding: '8px 12px', borderRadius: '6px', border: '1px solid #cbd5e1' }}
                                                             value={weighingReadings[loadG].desc}
                                                             onChange={e => {
                                                                 const val = e.target.value;
@@ -410,14 +413,6 @@ export default function TestExecutionPage() {
                                                                 }));
                                                             }}
                                                         />
-                                                    </td>
-                                                    <td style={{ fontFamily: 'monospace' }}>{res.asc_error !== undefined ? (res.asc_error * 1000).toFixed(1) : 0} g</td>
-                                                    <td style={{ fontFamily: 'monospace' }}>{res.desc_error !== undefined ? (res.desc_error * 1000).toFixed(1) : 0} g</td>
-                                                    <td style={{ fontFamily: 'monospace' }}>±{res.limit !== undefined ? (res.limit * 1000).toFixed(1) : 0} g</td>
-                                                    <td>
-                                                        <span className={`status-badge ${res.result === 'PASS' ? 'status-pass' : 'status-fail'}`}>
-                                                            {res.result}
-                                                        </span>
                                                     </td>
                                                 </tr>
                                             );
@@ -431,8 +426,8 @@ export default function TestExecutionPage() {
                         {currentTest.id === 3 && (
                             <div>
                                 <h4 style={{ color: '#F29F67' }}>Repeatability Test Readings</h4>
-                                <p style={{ fontSize: '0.88rem', color: '#64748b' }}>
-                                    Test Load: <strong>{(currentTest.load / 1000).toFixed(3)} kg</strong> &bull; Permissible Max Diff: <strong>±{(currentTest.max_diff_e * eG).toFixed(2)} g</strong>
+                                <p style={{ fontSize: '0.88rem', color: '#64748b', marginBottom: '16px' }}>
+                                    Applied Test Load: <strong>{(currentTest.load / 1000).toFixed(3)} kg</strong>
                                 </p>
 
                                 <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '14px', margin: '20px 0' }}>
@@ -442,6 +437,7 @@ export default function TestExecutionPage() {
                                             <input
                                                 type="number"
                                                 step="any"
+                                                placeholder="Enter observed reading"
                                                 className="form-input"
                                                 value={repeatabilityReadings[key]}
                                                 onChange={e => {
@@ -452,19 +448,6 @@ export default function TestExecutionPage() {
                                         </div>
                                     ))}
                                 </div>
-
-                                {(() => {
-                                    const repRes = calculateRepeatabilityResults();
-                                    return (
-                                        <div style={{ background: '#f8fafc', padding: '16px', borderRadius: '8px', border: '1px solid #e2e8f0', display: 'flex', gap: '24px', flexWrap: 'wrap' }}>
-                                            <div>Max: <strong>{repRes.max} kg</strong></div>
-                                            <div>Min: <strong>{repRes.min} kg</strong></div>
-                                            <div>Max Diff: <strong>{((repRes.range || 0) * 1000).toFixed(1)} g</strong></div>
-                                            <div>MPE Limit: <strong>±{((repRes.limit || 0) * 1000).toFixed(1)} g</strong></div>
-                                            <div>Status: <span className={`status-badge ${repRes.Repeatability === 'PASS' ? 'status-pass' : 'status-fail'}`}>{repRes.Repeatability}</span></div>
-                                        </div>
-                                    );
-                                })()}
                             </div>
                         )}
 
@@ -472,7 +455,7 @@ export default function TestExecutionPage() {
                         {currentTest.id === 4 && (
                             <div>
                                 <h4 style={{ color: '#F29F67' }}>Eccentricity Off-Center Loading</h4>
-                                <p style={{ fontSize: '0.88rem', color: '#64748b' }}>Applied Test Load: <strong>{(currentTest.load / 1000).toFixed(3)} kg</strong></p>
+                                <p style={{ fontSize: '0.88rem', color: '#64748b', marginBottom: '16px' }}>Applied Test Load: <strong>{(currentTest.load / 1000).toFixed(3)} kg</strong></p>
 
                                 <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '16px', margin: '20px 0' }}>
                                     {['front', 'right', 'rear', 'left', 'center'].map(pos => (
@@ -481,6 +464,7 @@ export default function TestExecutionPage() {
                                             <input
                                                 type="number"
                                                 step="any"
+                                                placeholder="Enter observed reading"
                                                 className="form-input"
                                                 value={eccentricityReadings[pos]}
                                                 onChange={e => {
@@ -498,12 +482,13 @@ export default function TestExecutionPage() {
                         {currentTest.id === 5 && (
                             <div>
                                 <h4 style={{ color: '#F29F67' }}>Zero-Setting / Zero Tracking</h4>
-                                <div style={{ maxWidth: '300px', margin: '20px 0' }}>
+                                <div style={{ maxWidth: '320px', margin: '20px 0' }}>
                                     <div className="form-group">
                                         <label>Zero Indication Reading (kg)</label>
                                         <input
                                             type="number"
                                             step="any"
+                                            placeholder="Enter observed reading"
                                             className="form-input"
                                             value={zeroReading.indication}
                                             onChange={e => setZeroReading({ indication: e.target.value })}
@@ -523,6 +508,7 @@ export default function TestExecutionPage() {
                                         <input
                                             type="number"
                                             step="any"
+                                            placeholder="Enter applied tare load"
                                             className="form-input"
                                             value={tareReading.tare_load}
                                             onChange={e => setTareReading(prev => ({ ...prev, tare_load: e.target.value }))}
@@ -533,6 +519,7 @@ export default function TestExecutionPage() {
                                         <input
                                             type="number"
                                             step="any"
+                                            placeholder="Enter net indication"
                                             className="form-input"
                                             value={tareReading.net_indication}
                                             onChange={e => setTareReading(prev => ({ ...prev, net_indication: e.target.value }))}
@@ -552,6 +539,7 @@ export default function TestExecutionPage() {
                                         <input
                                             type="number"
                                             step="any"
+                                            placeholder="Enter level reading"
                                             className="form-input"
                                             value={tiltReading.ref}
                                             onChange={e => setTiltReading(prev => ({ ...prev, ref: e.target.value }))}
@@ -562,6 +550,7 @@ export default function TestExecutionPage() {
                                         <input
                                             type="number"
                                             step="any"
+                                            placeholder="Enter X tilt reading"
                                             className="form-input"
                                             value={tiltReading.tilt_x}
                                             onChange={e => setTiltReading(prev => ({ ...prev, tilt_x: e.target.value }))}
@@ -572,6 +561,7 @@ export default function TestExecutionPage() {
                                         <input
                                             type="number"
                                             step="any"
+                                            placeholder="Enter Y tilt reading"
                                             className="form-input"
                                             value={tiltReading.tilt_y}
                                             onChange={e => setTiltReading(prev => ({ ...prev, tilt_y: e.target.value }))}
