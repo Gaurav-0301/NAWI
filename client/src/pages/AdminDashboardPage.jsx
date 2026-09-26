@@ -4,6 +4,7 @@ import Sidebar from '../components/Sidebar';
 import Header from '../components/Header';
 import { useAuth } from '../context/AuthContext';
 import { SkeletonDashboard } from '../components/SkeletonLoader';
+import { cachedFetch, clearApiCache } from '../utils/apiCache';
 
 export default function AdminDashboardPage() {
     const { user, authFetch } = useAuth();
@@ -68,8 +69,7 @@ export default function AdminDashboardPage() {
 
     const fetchAdminData = () => {
         setLoading(true);
-        authFetch('/api/admin/dashboard')
-            .then(res => res.json())
+        cachedFetch(authFetch, '/api/admin/dashboard')
             .then(data => {
                 if (data && !data.error) setAdminData(data);
             })

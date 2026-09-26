@@ -3,6 +3,7 @@ import { Link, useNavigate } from 'react-router-dom';
 import Sidebar from '../components/Sidebar';
 import Header from '../components/Header';
 import { useAuth } from '../context/AuthContext';
+import { cachedFetch } from '../utils/apiCache';
 
 export default function HomePage() {
     const { user, authFetch } = useAuth();
@@ -14,8 +15,7 @@ export default function HomePage() {
     const [pendingInfo, setPendingInfo] = useState(null);
 
     useEffect(() => {
-        authFetch('/api/history')
-            .then(res => res.json())
+        cachedFetch(authFetch, '/api/history')
             .then(data => {
                 if (Array.isArray(data)) {
                     setReports(data);
@@ -92,16 +92,16 @@ export default function HomePage() {
                             <p className="text-slate-500 text-xs font-semibold uppercase tracking-wider">Total Tests</p>
                         </div>
                         <div className="bg-white p-5 rounded-xl border border-slate-200 shadow-sm">
-                            <h2 className="text-3xl font-extrabold text-[#34B1AA] mb-0.5">{stats.passed}</h2>
-                            <p className="text-slate-500 text-xs font-semibold uppercase tracking-wider">Passed</p>
+                            <h2 className="text-3xl font-extrabold text-[#34B1AA] mb-0.5">{user?.role === 'tester' ? stats.total : stats.passed}</h2>
+                            <p className="text-slate-500 text-xs font-semibold uppercase tracking-wider">{user?.role === 'tester' ? 'Submitted' : 'Passed'}</p>
                         </div>
                         <div className="bg-white p-5 rounded-xl border border-slate-200 shadow-sm">
                             <h2 className="text-3xl font-extrabold text-amber-500 mb-0.5">{pendingInfo ? 1 : 0}</h2>
                             <p className="text-slate-500 text-xs font-semibold uppercase tracking-wider">Pending Sessions</p>
                         </div>
                         <div className="bg-white p-5 rounded-xl border border-slate-200 shadow-sm">
-                            <h2 className="text-3xl font-extrabold text-rose-500 mb-0.5">{stats.failed}</h2>
-                            <p className="text-slate-500 text-xs font-semibold uppercase tracking-wider">Failed</p>
+                            <h2 className="text-3xl font-extrabold text-rose-500 mb-0.5">{user?.role === 'tester' ? (reports.filter(r => ['REJECTED_BY_VIEWER', 'REJECTED_BY_ADMIN', 'SENT_BACK_TO_TESTER'].includes(r.workflow_status)).length) : stats.failed}</h2>
+                            <p className="text-slate-500 text-xs font-semibold uppercase tracking-wider">{user?.role === 'tester' ? 'Re-Test Needed' : 'Failed'}</p>
                         </div>
                     </div>
 
@@ -143,11 +143,13 @@ export default function HomePage() {
                                                 <span className="text-slate-400 text-xs font-mono ml-2">({t.id})</span>
                                             </div>
                                             <span className={`px-2.5 py-0.5 rounded-full text-xs font-bold tracking-wide ${
-                                                t.status === 'PASS' 
-                                                    ? 'bg-teal-50 text-teal-700 border border-teal-200' 
-                                                    : 'bg-rose-50 text-rose-700 border border-rose-200'
+                                                user?.role === 'tester'
+                                                    ? 'bg-sky-50 text-sky-700 border border-sky-200'
+                                                    : t.status === 'PASS' 
+                                                        ? 'bg-teal-50 text-teal-700 border border-teal-200' 
+                                                        : 'bg-rose-50 text-rose-700 border border-rose-200'
                                             }`}>
-                                                {t.status}
+                                                {user?.role === 'tester' ? 'SUBMITTED' : t.status}
                                             </span>
                                         </li>
                                     ))}

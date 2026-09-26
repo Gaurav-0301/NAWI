@@ -4,6 +4,8 @@ import Sidebar from '../components/Sidebar';
 import Header from '../components/Header';
 import { useAuth } from '../context/AuthContext';
 import { getMPE } from '../utils/r76engine';
+import ReadingPhotoUploader from '../components/ReadingPhotoUploader';
+import { clearApiCache } from '../utils/apiCache';
 
 export default function TestExecutionPage() {
     const navigate = useNavigate();
@@ -32,8 +34,16 @@ export default function TestExecutionPage() {
     const [tareReading, setTareReading] = useState({ tare_load: '', net_indication: '' });
     const [tiltReading, setTiltReading] = useState({ ref: '', tilt_x: '', tilt_y: '' });
 
-    // Evidence Register
+    // Reading Photo Proofs Map & Evidence Register
+    const [readingProofs, setReadingProofs] = useState({});
     const [evidenceList, setEvidenceList] = useState([]);
+
+    const handleProofUploaded = (key, proofObj) => {
+        setReadingProofs(prev => ({
+            ...prev,
+            [key]: proofObj
+        }));
+    };
 
     useEffect(() => {
         const rawPlan = localStorage.getItem("confirmedTestPlan") || localStorage.getItem("testPlan");
@@ -327,6 +337,7 @@ export default function TestExecutionPage() {
                 form_tare_results: fTareRes,
                 form_tilt: tiltReading,
                 form_tilt_results: fTiltRes,
+                reading_proofs: readingProofs,
                 lab_details: labDetails,
                 instrument_photo: photo,
                 administrative_evidence: adminEvidence,
@@ -343,6 +354,7 @@ export default function TestExecutionPage() {
             const data = await res.json();
             if (!res.ok) throw new Error(data.error || "Save failed");
 
+            clearApiCache();
             localStorage.removeItem("InstrumentData");
             localStorage.removeItem("confirmedTestPlan");
 
@@ -409,6 +421,14 @@ export default function TestExecutionPage() {
                                         </label>
                                     ))}
                                 </div>
+                                <div style={{ marginTop: '20px' }}>
+                                    <ReadingPhotoUploader
+                                        readingKey="visual_inspection"
+                                        label="Visual Inspection Reading Photo Proof (Cloudinary + GPS)"
+                                        currentProof={readingProofs["visual_inspection"]}
+                                        onProofUploaded={handleProofUploaded}
+                                    />
+                                </div>
                             </div>
                         )}
 
@@ -422,6 +442,7 @@ export default function TestExecutionPage() {
                                             <th>LOAD</th>
                                             <th>ASCENDING (KG)</th>
                                             <th>DESCENDING (KG)</th>
+                                            <th>READING PHOTO PROOF</th>
                                         </tr>
                                     </thead>
                                     <tbody>
@@ -435,7 +456,7 @@ export default function TestExecutionPage() {
                                                             type="number"
                                                             step="any"
                                                             placeholder="Enter observed reading"
-                                                            style={{ width: '180px', padding: '8px 12px', borderRadius: '6px', border: '1px solid #cbd5e1' }}
+                                                            style={{ width: '160px', padding: '8px 12px', borderRadius: '6px', border: '1px solid #cbd5e1' }}
                                                             value={weighingReadings[loadG].asc}
                                                             onChange={e => {
                                                                 const val = e.target.value;
@@ -451,7 +472,7 @@ export default function TestExecutionPage() {
                                                             type="number"
                                                             step="any"
                                                             placeholder="Enter observed reading"
-                                                            style={{ width: '180px', padding: '8px 12px', borderRadius: '6px', border: '1px solid #cbd5e1' }}
+                                                            style={{ width: '160px', padding: '8px 12px', borderRadius: '6px', border: '1px solid #cbd5e1' }}
                                                             value={weighingReadings[loadG].desc}
                                                             onChange={e => {
                                                                 const val = e.target.value;
@@ -460,6 +481,14 @@ export default function TestExecutionPage() {
                                                                     [loadG]: { ...prev[loadG], desc: val }
                                                                 }));
                                                             }}
+                                                        />
+                                                    </td>
+                                                    <td>
+                                                        <ReadingPhotoUploader
+                                                            readingKey={`weighing_${loadG}`}
+                                                            label={`Load ${loadKg}kg Proof`}
+                                                            currentProof={readingProofs[`weighing_${loadG}`]}
+                                                            onProofUploaded={handleProofUploaded}
                                                         />
                                                     </td>
                                                 </tr>
@@ -478,20 +507,27 @@ export default function TestExecutionPage() {
                                     Applied Test Load: <strong>{(currentTest.load / 1000).toFixed(3)} kg</strong>
                                 </p>
 
-                                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '14px', margin: '20px 0' }}>
+                                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: '16px', margin: '20px 0' }}>
                                     {Object.keys(repeatabilityReadings).map((key, i) => (
-                                        <div key={key} className="form-group">
-                                            <label>Reading {i + 1} (kg)</label>
+                                        <div key={key} className="form-group" style={{ background: '#f8fafc', padding: '14px', borderRadius: '10px', border: '1px solid #e2e8f0' }}>
+                                            <label style={{ fontWeight: 600, color: '#1e293b' }}>Reading {i + 1} (kg)</label>
                                             <input
                                                 type="number"
                                                 step="any"
                                                 placeholder="Enter observed reading"
                                                 className="form-input"
+                                                style={{ marginBottom: '8px' }}
                                                 value={repeatabilityReadings[key]}
                                                 onChange={e => {
                                                     const val = e.target.value;
                                                     setRepeatabilityReadings(prev => ({ ...prev, [key]: val }));
                                                 }}
+                                            />
+                                            <ReadingPhotoUploader
+                                                readingKey={`repeatability_${key}`}
+                                                label={`Reading ${i+1} Photo Proof`}
+                                                currentProof={readingProofs[`repeatability_${key}`]}
+                                                onProofUploaded={handleProofUploaded}
                                             />
                                         </div>
                                     ))}
@@ -505,20 +541,27 @@ export default function TestExecutionPage() {
                                 <h4 style={{ color: '#F29F67' }}>Eccentricity Off-Center Loading</h4>
                                 <p style={{ fontSize: '0.88rem', color: '#64748b', marginBottom: '16px' }}>Applied Test Load: <strong>{(currentTest.load / 1000).toFixed(3)} kg</strong></p>
 
-                                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '16px', margin: '20px 0' }}>
+                                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: '16px', margin: '20px 0' }}>
                                     {['front', 'right', 'rear', 'left', 'center'].map(pos => (
-                                        <div key={pos} className="form-group">
-                                            <label style={{ textTransform: 'capitalize' }}>{pos} Position (kg)</label>
+                                        <div key={pos} className="form-group" style={{ background: '#f8fafc', padding: '14px', borderRadius: '10px', border: '1px solid #e2e8f0' }}>
+                                            <label style={{ textTransform: 'capitalize', fontWeight: 600, color: '#1e293b' }}>{pos} Position (kg)</label>
                                             <input
                                                 type="number"
                                                 step="any"
                                                 placeholder="Enter observed reading"
                                                 className="form-input"
+                                                style={{ marginBottom: '8px' }}
                                                 value={eccentricityReadings[pos]}
                                                 onChange={e => {
                                                     const val = e.target.value;
                                                     setEccentricityReadings(prev => ({ ...prev, [pos]: val }));
                                                 }}
+                                            />
+                                            <ReadingPhotoUploader
+                                                readingKey={`eccentricity_${pos}`}
+                                                label={`${pos.toUpperCase()} Position Photo Proof`}
+                                                currentProof={readingProofs[`eccentricity_${pos}`]}
+                                                onProofUploaded={handleProofUploaded}
                                             />
                                         </div>
                                     ))}
@@ -530,7 +573,7 @@ export default function TestExecutionPage() {
                         {currentTest.id === 5 && (
                             <div>
                                 <h4 style={{ color: '#F29F67' }}>Zero-Setting / Zero Tracking</h4>
-                                <div style={{ maxWidth: '320px', margin: '20px 0' }}>
+                                <div style={{ maxWidth: '450px', margin: '20px 0' }}>
                                     <div className="form-group">
                                         <label>Zero Indication Reading (kg)</label>
                                         <input
@@ -538,8 +581,15 @@ export default function TestExecutionPage() {
                                             step="any"
                                             placeholder="Enter observed reading"
                                             className="form-input"
+                                            style={{ marginBottom: '8px' }}
                                             value={zeroReading.indication}
                                             onChange={e => setZeroReading({ indication: e.target.value })}
+                                        />
+                                        <ReadingPhotoUploader
+                                            readingKey="zero_setting"
+                                            label="Zero Setting Photo Proof"
+                                            currentProof={readingProofs["zero_setting"]}
+                                            onProofUploaded={handleProofUploaded}
                                         />
                                     </div>
                                 </div>
@@ -550,7 +600,7 @@ export default function TestExecutionPage() {
                         {currentTest.id === 6 && (
                             <div>
                                 <h4 style={{ color: '#F29F67' }}>Tare Accuracy Test</h4>
-                                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: '16px', margin: '20px 0' }}>
+                                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(250px, 1fr))', gap: '16px', margin: '20px 0' }}>
                                     <div className="form-group">
                                         <label>Tare Load Applied (kg)</label>
                                         <input
@@ -574,6 +624,12 @@ export default function TestExecutionPage() {
                                         />
                                     </div>
                                 </div>
+                                <ReadingPhotoUploader
+                                    readingKey="tare_accuracy"
+                                    label="Tare Accuracy Reading Photo Proof"
+                                    currentProof={readingProofs["tare_accuracy"]}
+                                    onProofUploaded={handleProofUploaded}
+                                />
                             </div>
                         )}
 
@@ -616,6 +672,12 @@ export default function TestExecutionPage() {
                                         />
                                     </div>
                                 </div>
+                                <ReadingPhotoUploader
+                                    readingKey="tilt_test"
+                                    label="Tilt Test Observation Photo Proof"
+                                    currentProof={readingProofs["tilt_test"]}
+                                    onProofUploaded={handleProofUploaded}
+                                />
                             </div>
                         )}
                     </div>
@@ -638,7 +700,7 @@ export default function TestExecutionPage() {
                                 disabled={saving}
                                 onClick={handleSaveReport}
                             >
-                                {saving ? 'Saving Report...' : 'Save & Finish Verification Report'} <i className="fas fa-check"></i>
+                                {saving ? 'Submitting Report...' : 'Submit All Readings & Proofs to Viewer Dashboard'} <i className="fas fa-paper-plane"></i>
                             </button>
                         ) : (
                             <button

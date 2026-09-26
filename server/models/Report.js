@@ -20,6 +20,7 @@ const ReportSchema = new mongoose.Schema({
     form_tilt_results:       mongoose.Schema.Types.Mixed,
     
     // Administrative & Integrity Fields
+    reading_proofs:          mongoose.Schema.Types.Mixed, // Map of test reading keys -> photo metadata (Cloudinary URL, timestamp, lat, lng, labVerified)
     lab_details:             mongoose.Schema.Types.Mixed,
     instrument_photo:        String, // base64 (legacy fallback)
     administrative_evidence: mongoose.Schema.Types.Mixed,
@@ -46,6 +47,12 @@ const ReportSchema = new mongoose.Schema({
 
     createdAt:               { type: Date, default: Date.now }
 });
+
+// Database Indexes for Fast Dashboard Querying
+ReportSchema.index({ createdAt: -1 });
+ReportSchema.index({ workflow_status: 1, createdAt: -1 });
+ReportSchema.index({ createdBy: 1, createdAt: -1 });
+ReportSchema.index({ sha256_hash: 1 });
 
 const Report = mongoose.model("Report", ReportSchema);
 

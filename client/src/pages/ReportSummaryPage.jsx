@@ -8,7 +8,7 @@ import { SkeletonReportPage } from '../components/SkeletonLoader';
 export default function ReportSummaryPage() {
     const { id } = useParams();
     const navigate = useNavigate();
-    const { authFetch } = useAuth();
+    const { authFetch, user } = useAuth();
 
     const [report, setReport] = useState(null);
     const [loading, setLoading] = useState(true);
@@ -193,33 +193,68 @@ export default function ReportSummaryPage() {
                                             </div>
                                             <span style={{ fontSize: '0.8rem', color: '#64748b' }}>{item.sub}</span>
                                         </div>
-                                        <span className={`status-badge ${st === 'PASS' ? 'status-pass' : 'status-fail'}`}>
-                                            <i className={`fas ${st === 'PASS' ? 'fa-check' : 'fa-times'}`}></i> {st}
-                                        </span>
+                                        {user?.role === 'tester' ? (
+                                            <span className="status-badge" style={{ background: '#E0F2FE', color: '#0369A1', border: '1px solid #BAE6FD' }}>
+                                                <i className="fas fa-check-circle" style={{ marginRight: '4px' }}></i> RECORDED
+                                            </span>
+                                        ) : (
+                                            <span className={`status-badge ${st === 'PASS' ? 'status-pass' : 'status-fail'}`}>
+                                                <i className={`fas ${st === 'PASS' ? 'fa-check' : 'fa-times'}`}></i> {st}
+                                            </span>
+                                        )}
                                     </div>
                                 );
                             })}
                         </div>
 
-                        {/* Overall Result */}
-                        <div style={{ background: overallPass ? '#f0fdf4' : '#fef2f2', border: `1.5px solid ${overallPass ? '#bbf7d0' : '#fecaca'}`, borderRadius: '12px', padding: '20px', textAlign: 'center', marginBottom: '24px' }}>
-                            <h4 style={{ margin: '0 0 6px 0', color: overallPass ? '#166534' : '#991b1b', fontSize: '0.9rem' }}>OVERALL VERIFICATION RESULT</h4>
-                            <div style={{ fontSize: '1.8rem', fontWeight: 800, color: overallPass ? '#166534' : '#991b1b', margin: '4px 0 8px' }}>
-                                {overallPass ? '✓ PASS' : '❌ FAIL'}
+                        {/* Overall Result / Tester Submission Banner */}
+                        {user?.role === 'tester' ? (
+                            <div style={{ background: '#f0f9ff', border: '1.5px solid #bae6fd', borderRadius: '12px', padding: '20px', textAlign: 'center', marginBottom: '24px' }}>
+                                <h4 style={{ margin: '0 0 6px 0', color: '#0369a1', fontSize: '0.9rem', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
+                                    <i className="fas fa-paper-plane" style={{ marginRight: '6px' }}></i>
+                                    READINGS & PROOFS SUBMITTED TO VIEWER DASHBOARD
+                                </h4>
+                                <div style={{ fontSize: '1.5rem', fontWeight: 800, color: '#0284c7', margin: '4px 0 8px' }}>
+                                    ✓ Submitted for Quality Review
+                                </div>
+                                <div style={{ fontSize: '0.88rem', color: '#0369a1' }}>
+                                    All instrument details, test readings & photo proofs recorded successfully.
+                                </div>
                             </div>
-                            <div style={{ fontSize: '0.88rem', color: overallPass ? '#15803d' : '#b91c1c' }}>
-                                {passCount} / {totalTests} tests passed
+                        ) : (
+                            <div style={{ background: overallPass ? '#f0fdf4' : '#fef2f2', border: `1.5px solid ${overallPass ? '#bbf7d0' : '#fecaca'}`, borderRadius: '12px', padding: '20px', textAlign: 'center', marginBottom: '24px' }}>
+                                <h4 style={{ margin: '0 0 6px 0', color: overallPass ? '#166534' : '#991b1b', fontSize: '0.9rem' }}>OVERALL VERIFICATION RESULT</h4>
+                                <div style={{ fontSize: '1.8rem', fontWeight: 800, color: overallPass ? '#166534' : '#991b1b', margin: '4px 0 8px' }}>
+                                    {overallPass ? '✓ PASS' : '❌ FAIL'}
+                                </div>
+                                <div style={{ fontSize: '0.88rem', color: overallPass ? '#15803d' : '#b91c1c' }}>
+                                    {passCount} / {totalTests} tests passed
+                                </div>
                             </div>
-                        </div>
+                        )}
 
                         {/* Actions */}
-                        <div style={{ display: 'flex', gap: '16px', justifyContent: 'flex-end' }}>
+                        <div style={{ display: 'flex', gap: '16px', justifyContent: 'flex-end', alignItems: 'center' }}>
                             <Link to={`/report-detailed/${report._id}`} className="btn-secondary" style={{ padding: '12px 20px', borderRadius: '6px', textDecoration: 'none', fontWeight: 600 }}>
-                                <i className="fas fa-list"></i> View Detailed Results
+                                <i className="fas fa-list"></i> View Detailed Report
                             </Link>
-                            <button className="btn" style={{ background: '#3B8FF3', padding: '12px 24px' }} onClick={() => window.open(`/certificate/${report._id}`, '_blank')}>
-                                <i className="fas fa-file-pdf"></i> Generate Certificate
-                            </button>
+                            {user?.role === 'tester' ? (
+                                <button
+                                    className="btn"
+                                    style={{ background: '#34B1AA', padding: '12px 24px', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '8px' }}
+                                    onClick={() => {
+                                        alert(`Report TP-${report._id.substring(0, 8).toUpperCase()} is submitted to the Viewer Dashboard for quality review.`);
+                                        navigate('/history');
+                                    }}
+                                >
+                                    <i className="fas fa-paper-plane"></i>
+                                    <span>Sent to Viewer Dashboard</span>
+                                </button>
+                            ) : (
+                                <button className="btn" style={{ background: '#3B8FF3', padding: '12px 24px' }} onClick={() => window.open(`/certificate/${report._id}`, '_blank')}>
+                                    <i className="fas fa-file-pdf"></i> Generate Certificate
+                                </button>
+                            )}
                         </div>
                     </div>
                 </div>

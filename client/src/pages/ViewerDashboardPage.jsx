@@ -3,6 +3,8 @@ import Sidebar from '../components/Sidebar';
 import Header from '../components/Header';
 import { useAuth } from '../context/AuthContext';
 import { SkeletonTable } from '../components/SkeletonLoader';
+import { cachedFetch, clearApiCache } from '../utils/apiCache';
+import { getOptimizedCloudinaryUrl } from '../utils/cloudinaryUrl';
 
 export default function ViewerDashboardPage() {
     const { authFetch, showToast } = useAuth();
@@ -30,6 +32,9 @@ export default function ViewerDashboardPage() {
     const [selectedReport, setSelectedReport] = useState(null);
     const [reviewModalOpen, setReviewModalOpen] = useState(false);
     
+    // Viewer Cross-Check Modified Results State
+    const [modifiedResults, setModifiedResults] = useState({});
+
     // Test-level Comments state: { [testKey]: commentString }
     const [rowComments, setRowComments] = useState({});
     const [generalComment, setGeneralComment] = useState('');
@@ -41,8 +46,7 @@ export default function ViewerDashboardPage() {
     // Fetch Analytics Stats
     const fetchStats = () => {
         setStatsLoading(true);
-        authFetch('/api/viewer/stats')
-            .then(res => res.json())
+        cachedFetch(authFetch, '/api/viewer/stats')
             .then(data => {
                 if (data && !data.error) {
                     setStats(data);
@@ -55,8 +59,7 @@ export default function ViewerDashboardPage() {
     // Fetch Reports by Tab
     const fetchReports = (tab) => {
         setLoading(true);
-        authFetch(`/api/viewer/reports?tab=${tab}`)
-            .then(res => res.json())
+        cachedFetch(authFetch, `/api/viewer/reports?tab=${tab}`)
             .then(data => {
                 if (Array.isArray(data)) {
                     setReports(data);
@@ -81,7 +84,60 @@ export default function ViewerDashboardPage() {
         setSelectedReport(report);
         setRowComments({});
         setGeneralComment('');
+        setModifiedResults({
+            form1_results: report.form1_results ? JSON.parse(JSON.stringify(report.form1_results)) : {},
+            form2_results: report.form2_results ? JSON.parse(JSON.stringify(report.form2_results)) : {},
+            form3_results: report.form3_results ? JSON.parse(JSON.stringify(report.form3_results)) : {},
+            form_zero_results: report.form_zero_results ? JSON.parse(JSON.stringify(report.form_zero_results)) : {},
+            form_tare_results: report.form_tare_results ? JSON.parse(JSON.stringify(report.form_tare_results)) : {},
+            form_tilt_results: report.form_tilt_results ? JSON.parse(JSON.stringify(report.form_tilt_results)) : {}
+        });
         setReviewModalOpen(true);
+    };
+
+    // Viewer Cross-Check Result Toggles
+    const toggleForm1RowStatus = (loadKey) => {
+        setModifiedResults(prev => {
+            const copy = JSON.parse(JSON.stringify(prev));
+            if (copy.form1_results && copy.form1_results[loadKey]) {
+                const current = copy.form1_results[loadKey].asc_status || 'PASS';
+                const next = current === 'PASS' ? 'FAIL' : 'PASS';
+                copy.form1_results[loadKey].asc_status = next;
+                copy.form1_results[loadKey].desc_status = next;
+            }
+            return copy;
+        });
+    };
+
+    const toggleForm2Status = () => {
+        setModifiedResults(prev => {
+            const copy = JSON.parse(JSON.stringify(prev));
+            if (!copy.form2_results) copy.form2_results = {};
+            const current = copy.form2_results.Repeatability || 'PASS';
+            copy.form2_results.Repeatability = current === 'PASS' ? 'FAIL' : 'PASS';
+            return copy;
+        });
+    };
+
+    const toggleForm3PosStatus = (pos) => {
+        setModifiedResults(prev => {
+            const copy = JSON.parse(JSON.stringify(prev));
+            if (copy.form3_results && copy.form3_results.details && copy.form3_results.details[pos]) {
+                const current = copy.form3_results.details[pos].result || 'PASS';
+                copy.form3_results.details[pos].result = current === 'PASS' ? 'FAIL' : 'PASS';
+            }
+            return copy;
+        });
+    };
+
+    const toggleSimpleStatus = (formKey, resKey) => {
+        setModifiedResults(prev => {
+            const copy = JSON.parse(JSON.stringify(prev));
+            if (!copy[formKey]) copy[formKey] = {};
+            const current = copy[formKey][resKey] || 'PASS';
+            copy[formKey][resKey] = current === 'PASS' ? 'FAIL' : 'PASS';
+            return copy;
+        });
     };
 
     // Handle Comment Change for a Test Row
@@ -123,7 +179,8 @@ export default function ViewerDashboardPage() {
                 body: JSON.stringify({
                     action,
                     comments: formattedComments,
-                    general_comment: generalComment.trim()
+                    general_comment: generalComment.trim(),
+                    modified_results: modifiedResults
                 })
             });
 
@@ -135,6 +192,7 @@ export default function ViewerDashboardPage() {
             showToast(data.message || (action === 'APPROVE' ? 'Report forwarded to Admin for approval' : 'Report sent back to Tester with comments'));
             setReviewModalOpen(false);
             setSelectedReport(null);
+            clearApiCache('/api/viewer');
             fetchStats();
             fetchReports(activeTab);
         } catch (err) {
@@ -166,7 +224,7 @@ export default function ViewerDashboardPage() {
                 <Header title="Quality Reviewer Technical Portal" />
                 <div className="app-content">
 
-                    {/* Page Title & Description matching HistoryPage style */}
+                    {/* Page Title & Description */}
                     <div style={{ marginBottom: '24px' }}>
                         <h2 style={{ fontSize: '1.6rem', margin: '0 0 6px 0', fontFamily: 'Outfit, sans-serif', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.5px' }}>
                             TECHNICAL REVIEW QUEUE
@@ -176,9 +234,8 @@ export default function ViewerDashboardPage() {
                         </p>
                     </div>
 
-                    {/* 1. Overview / Analytics Section (Matching App Theme Cards) */}
+                    {/* Overview / Analytics Section */}
                     <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: '16px', marginBottom: '24px' }}>
-                        {/* Card 1: Registered Labs / Testers */}
                         <div className="form-card" style={{ padding: '20px', display: 'flex', alignItems: 'center', gap: '16px', marginBottom: 0 }}>
                             <div style={{ width: '46px', height: '46px', borderRadius: '10px', background: '#F1F5F9', color: '#475569', display: 'grid', placeItems: 'center', fontSize: '1.3rem' }}>
                                 <i className="fas fa-users-cog"></i>
@@ -193,7 +250,6 @@ export default function ViewerDashboardPage() {
                             </div>
                         </div>
 
-                        {/* Card 2: Pending Review Queue */}
                         <div className="form-card" style={{ padding: '20px', display: 'flex', alignItems: 'center', gap: '16px', borderLeft: '4px solid #F29F67', marginBottom: 0 }}>
                             <div style={{ width: '46px', height: '46px', borderRadius: '10px', background: '#FEF0E6', color: '#F29F67', display: 'grid', placeItems: 'center', fontSize: '1.3rem' }}>
                                 <i className="fas fa-hourglass-half"></i>
@@ -208,7 +264,6 @@ export default function ViewerDashboardPage() {
                             </div>
                         </div>
 
-                        {/* Card 3: Sent for Admin Approval */}
                         <div className="form-card" style={{ padding: '20px', display: 'flex', alignItems: 'center', gap: '16px', borderLeft: '4px solid #3B8FF3', marginBottom: 0 }}>
                             <div style={{ width: '46px', height: '46px', borderRadius: '10px', background: '#EFF6FF', color: '#3B8FF3', display: 'grid', placeItems: 'center', fontSize: '1.3rem' }}>
                                 <i className="fas fa-paper-plane"></i>
@@ -223,7 +278,6 @@ export default function ViewerDashboardPage() {
                             </div>
                         </div>
 
-                        {/* Card 4: Certificates Issued */}
                         <div className="form-card" style={{ padding: '20px', display: 'flex', alignItems: 'center', gap: '16px', borderLeft: '4px solid #34B1AA', marginBottom: 0 }}>
                             <div style={{ width: '46px', height: '46px', borderRadius: '10px', background: '#ECFDF5', color: '#34B1AA', display: 'grid', placeItems: 'center', fontSize: '1.3rem' }}>
                                 <i className="fas fa-certificate"></i>
@@ -239,9 +293,8 @@ export default function ViewerDashboardPage() {
                         </div>
                     </div>
 
-                    {/* 2. Status Tracking Tabs & Search / Filter Card (Identical to HistoryPage layout) */}
+                    {/* Status Tracking Tabs & Search / Filter Card */}
                     <div className="form-card" style={{ marginBottom: '24px', padding: '20px' }}>
-                        {/* Tab Buttons */}
                         <div style={{ display: 'flex', gap: '12px', borderBottom: '1px solid #E2E8F0', paddingBottom: '14px', marginBottom: '16px', flexWrap: 'wrap' }}>
                             <button
                                 onClick={() => setActiveTab('pending')}
@@ -301,7 +354,7 @@ export default function ViewerDashboardPage() {
                             </button>
                         </div>
 
-                        {/* Search and Filters Input Bar (Identical to HistoryPage) */}
+                        {/* Search and Filters Input Bar */}
                         <div style={{ display: 'flex', gap: '16px', flexWrap: 'wrap', alignItems: 'center' }}>
                             <div style={{ flex: 1, minWidth: '240px', position: 'relative' }}>
                                 <i className="fas fa-search" style={{ position: 'absolute', left: '14px', top: '13px', color: '#94a3b8' }}></i>
@@ -335,7 +388,7 @@ export default function ViewerDashboardPage() {
                         </div>
                     </div>
 
-                    {/* 3. Pending Review Queue Table (Identical to HistoryPage table card) */}
+                    {/* Pending Review Queue Table */}
                     <div className="table-card">
                         {loading ? (
                             <SkeletonTable rows={5} cols={7} />
@@ -443,7 +496,7 @@ export default function ViewerDashboardPage() {
                 </div>
             </div>
 
-            {/* 4. Full Report Review Screen (Modal Overlay matching App Styling) */}
+            {/* Full Report Review Screen (Technical Audit Modal Drawer) */}
             {reviewModalOpen && selectedReport && (
                 <div style={{
                     position: 'fixed',
@@ -462,7 +515,7 @@ export default function ViewerDashboardPage() {
                     <div style={{
                         background: '#F8FAFC',
                         width: '100%',
-                        maxWidth: '1100px',
+                        maxWidth: '1150px',
                         height: '92vh',
                         borderRadius: '12px',
                         display: 'flex',
@@ -471,7 +524,7 @@ export default function ViewerDashboardPage() {
                         overflow: 'hidden',
                         fontFamily: 'Plus Jakarta Sans, sans-serif'
                     }}>
-                        {/* Review Screen Header */}
+                        {/* Review Screen Header with View Summary & View Detailed Buttons */}
                         <div style={{
                             background: '#0F172A',
                             color: 'white',
@@ -490,21 +543,56 @@ export default function ViewerDashboardPage() {
                                 </div>
                             </div>
 
-                            <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-                                <span className={`status-badge ${selectedReport.status === 'PASS' ? 'status-pass' : 'status-fail'}`}>
-                                    Auto: {selectedReport.status}
-                                </span>
+                            <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                                <a
+                                    href={`/report/${selectedReport._id}`}
+                                    target="_blank"
+                                    rel="noopener noreferrer"
+                                    style={{
+                                        background: '#F29F67',
+                                        color: 'white',
+                                        padding: '6px 14px',
+                                        borderRadius: '6px',
+                                        fontSize: '0.8rem',
+                                        fontWeight: 700,
+                                        textDecoration: 'none',
+                                        display: 'flex',
+                                        alignItems: 'center',
+                                        gap: '6px'
+                                    }}
+                                >
+                                    <i className="fas fa-file-alt"></i> View Report Summary
+                                </a>
+                                <a
+                                    href={`/report-detailed/${selectedReport._id}`}
+                                    target="_blank"
+                                    rel="noopener noreferrer"
+                                    style={{
+                                        background: '#3B8FF3',
+                                        color: 'white',
+                                        padding: '6px 14px',
+                                        borderRadius: '6px',
+                                        fontSize: '0.8rem',
+                                        fontWeight: 700,
+                                        textDecoration: 'none',
+                                        display: 'flex',
+                                        alignItems: 'center',
+                                        gap: '6px'
+                                    }}
+                                >
+                                    <i className="fas fa-list-check"></i> View Detailed Report
+                                </a>
                                 <button
                                     onClick={() => setReviewModalOpen(false)}
                                     style={{
-                                        background: 'rgba(255,255,255,0.1)',
+                                        background: 'rgba(255,255,255,0.15)',
                                         border: 'none',
                                         color: 'white',
                                         width: '32px',
                                         height: '32px',
                                         borderRadius: '6px',
                                         cursor: 'pointer',
-                                        fontSize: '1.1rem'
+                                        fontSize: '1.2rem'
                                     }}
                                 >
                                     &times;
@@ -515,12 +603,12 @@ export default function ViewerDashboardPage() {
                         {/* Review Content Body */}
                         <div style={{ flex: 1, overflowY: 'auto', padding: '24px', display: 'flex', flexDirection: 'column', gap: '20px' }}>
                             
-                            {/* Section A: Instrument & Administrative Evidence */}
+                            {/* Section 1: Instrument & Administrative Specifications */}
                             <div className="form-card" style={{ padding: '22px', borderLeft: '4px solid #F29F67', marginBottom: 0 }}>
                                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px', flexWrap: 'wrap', gap: '8px' }}>
                                     <h3 style={{ fontSize: '1.05rem', fontWeight: 600, fontFamily: 'Outfit, sans-serif', margin: 0, color: '#1e293b', display: 'flex', alignItems: 'center', gap: '8px' }}>
                                         <i className="fas fa-balance-scale" style={{ color: '#F29F67' }}></i>
-                                        1. Instrument Specifications & Administrative Evidence
+                                        1. Instrument Specifications & Administrative Verification
                                     </h3>
                                     <span style={{ background: '#ECFDF5', color: '#047857', border: '1px solid #A7F3D0', padding: '3px 10px', borderRadius: '12px', fontSize: '0.75rem', fontWeight: 700 }}>
                                         <i className="fas fa-check-circle"></i> Evidence Verified & Sealed
@@ -548,75 +636,24 @@ export default function ViewerDashboardPage() {
                                         <div style={{ fontSize: '0.75rem', color: '#64748b', fontWeight: 700 }}>VERIFICATION SCALE INTERVAL (e)</div>
                                         <div style={{ fontSize: '0.95rem', fontWeight: 600, color: '#0F172A' }}>{selectedReport.instrument_data?.e_value || selectedReport.instrument_data?.e || 10} {selectedReport.instrument_data?.e_unit || 'g'}</div>
                                     </div>
-                                    <div>
-                                        <div style={{ fontSize: '0.75rem', color: '#64748b', fontWeight: 700 }}>TESTING ENVIRONMENT</div>
-                                        <div style={{ fontSize: '0.85rem', color: '#334155', fontWeight: 600 }}>
-                                            <i className="fas fa-thermometer-half" style={{ color: '#F29F67', marginRight: '4px' }}></i>
-                                            {selectedReport.administrative_evidence?.temperature || selectedReport.lab_details?.temperature || '20'}°C &bull; {selectedReport.administrative_evidence?.humidity || selectedReport.lab_details?.humidity || '50'}% RH &bull; {selectedReport.lab_details?.voltage || '220'}V
-                                        </div>
-                                    </div>
-                                </div>
-
-                                {/* Attached Administrative Evidence Gallery */}
-                                <div style={{ background: '#F8FAFC', padding: '14px', borderRadius: '8px', border: '1px solid #E2E8F0' }}>
-                                    <div style={{ fontSize: '0.78rem', fontWeight: 700, color: '#475569', textTransform: 'uppercase', letterSpacing: '0.5px', marginBottom: '10px', display: 'flex', alignItems: 'center', gap: '6px' }}>
-                                        <i className="fas fa-photo-video" style={{ color: '#F29F67' }}></i> Administrative Photo & Document Evidence:
-                                    </div>
-
-                                    <div style={{ display: 'flex', gap: '12px', flexWrap: 'wrap', alignItems: 'center' }}>
-                                        {selectedReport.administrative_evidence?.photos?.front ? (
-                                            <div style={{ display: 'flex', alignItems: 'center', gap: '8px', background: 'white', padding: '6px 10px', borderRadius: '6px', border: '1px solid #CBD5E1', cursor: 'pointer' }} onClick={() => setPreviewPhoto(selectedReport.administrative_evidence.photos.front)}>
-                                                <img src={selectedReport.administrative_evidence.photos.front} alt="Front View" style={{ width: '36px', height: '36px', borderRadius: '4px', objectFit: 'cover' }} />
-                                                <span style={{ fontSize: '0.78rem', fontWeight: 600, color: '#1e293b' }}>Front View Photo</span>
-                                            </div>
-                                        ) : (
-                                            <span style={{ fontSize: '0.75rem', color: '#94a3b8', background: 'white', padding: '4px 8px', borderRadius: '4px', border: '1px solid #E2E8F0' }}>Front Photo: Attached</span>
-                                        )}
-
-                                        {selectedReport.administrative_evidence?.photos?.nameplate ? (
-                                            <div style={{ display: 'flex', alignItems: 'center', gap: '8px', background: 'white', padding: '6px 10px', borderRadius: '6px', border: '1px solid #CBD5E1', cursor: 'pointer' }} onClick={() => setPreviewPhoto(selectedReport.administrative_evidence.photos.nameplate)}>
-                                                <img src={selectedReport.administrative_evidence.photos.nameplate} alt="Nameplate" style={{ width: '36px', height: '36px', borderRadius: '4px', objectFit: 'cover' }} />
-                                                <span style={{ fontSize: '0.78rem', fontWeight: 600, color: '#1e293b' }}>Nameplate Markings</span>
-                                            </div>
-                                        ) : (
-                                            <span style={{ fontSize: '0.75rem', color: '#94a3b8', background: 'white', padding: '4px 8px', borderRadius: '4px', border: '1px solid #E2E8F0' }}>Nameplate Photo: Attached</span>
-                                        )}
-
-                                        {selectedReport.administrative_evidence?.photos?.rear_side ? (
-                                            <div style={{ display: 'flex', alignItems: 'center', gap: '8px', background: 'white', padding: '6px 10px', borderRadius: '6px', border: '1px solid #CBD5E1', cursor: 'pointer' }} onClick={() => setPreviewPhoto(selectedReport.administrative_evidence.photos.rear_side)}>
-                                                <img src={selectedReport.administrative_evidence.photos.rear_side} alt="Rear/Side View" style={{ width: '36px', height: '36px', borderRadius: '4px', objectFit: 'cover' }} />
-                                                <span style={{ fontSize: '0.78rem', fontWeight: 600, color: '#1e293b' }}>Rear / Side View</span>
-                                            </div>
-                                        ) : (
-                                            <span style={{ fontSize: '0.75rem', color: '#94a3b8', background: 'white', padding: '4px 8px', borderRadius: '4px', border: '1px solid #E2E8F0' }}>Rear/Side Photo: Attached</span>
-                                        )}
-
-                                        <div style={{ display: 'flex', alignItems: 'center', gap: '6px', background: '#EFF6FF', color: '#2563EB', padding: '6px 10px', borderRadius: '6px', fontSize: '0.78rem', fontWeight: 600, marginLeft: 'auto' }}>
-                                            <i className="fas fa-file-pdf"></i>
-                                            Docs: {selectedReport.administrative_evidence?.docs?.spec || "Tech Spec PDF"} &bull; {selectedReport.administrative_evidence?.docs?.manual || "Manual PDF"}
-                                        </div>
-                                    </div>
                                 </div>
                             </div>
 
-                            {/* Section B: Test Observations, Clause Explanations & Photo Evidence */}
-                            
-                            {/* Test 1: Form 1 - Weighing Performance Test */}
+                            {/* Section 2: Weighing Performance Test (Form 1) */}
                             <div className="form-card" style={{ padding: '20px', borderLeft: '4px solid #34B1AA', marginBottom: 0 }}>
                                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '14px' }}>
                                     <h3 style={{ fontSize: '1rem', fontWeight: 600, fontFamily: 'Outfit, sans-serif', margin: 0, color: '#0F172A' }}>
                                         2. Weighing Performance Test (Form 1)
                                     </h3>
                                     <span style={{ fontSize: '0.75rem', background: '#F1F5F9', color: '#475569', padding: '3px 8px', borderRadius: '4px', fontWeight: 700 }}>
-                                        OIML R76-1 Clause A.4.4
+                                        OIML R76-1 Clause 3.5.1 / Annex A.4.4
                                     </span>
                                 </div>
 
                                 <div style={{ background: '#F8FAFC', padding: '12px', borderRadius: '6px', marginBottom: '12px', fontSize: '0.85rem', color: '#475569', border: '1px solid #E2E8F0' }}>
-                                    <strong style={{ color: '#1E293B' }}>Clause Rule:</strong> Maximum permissible error (mpe) checked across load range up to Max capacity. Clause A.4.4 specifies tolerance steps &plusmn;0.5e, &plusmn;1.0e, &plusmn;1.5e.
+                                    <strong style={{ color: '#1E293B' }}>Clause Calculation Rule:</strong> Maximum Permissible Error (MPE) calculated across load steps (&plusmn;0.5e, &plusmn;1.0e, &plusmn;1.5e) for Class {selectedReport.instrument_data?.Class_value || 'III'}.
                                 </div>
 
-                                {/* Raw Observation Readings */}
                                 <div style={{ overflowX: 'auto', marginBottom: '14px' }}>
                                     <table style={{ width: '100%', fontSize: '0.85rem' }}>
                                         <thead>
@@ -624,8 +661,9 @@ export default function ViewerDashboardPage() {
                                                 <th style={{ padding: '8px' }}>Target Load (L)</th>
                                                 <th style={{ padding: '8px' }}>Indication (I)</th>
                                                 <th style={{ padding: '8px' }}>Calculated Error (E)</th>
-                                                <th style={{ padding: '8px' }}>Allowed MPE (mpe)</th>
-                                                <th style={{ padding: '8px' }}>Result</th>
+                                                <th style={{ padding: '8px' }}>Calculated MPE</th>
+                                                <th style={{ padding: '8px' }}>Reading Photo Proof</th>
+                                                <th style={{ padding: '8px' }}>Viewer Cross-Check Result</th>
                                             </tr>
                                         </thead>
                                         <tbody>
@@ -634,47 +672,49 @@ export default function ViewerDashboardPage() {
                                                     const ind = selectedReport.form1_data.indications ? selectedReport.form1_data.indications[idx] : load;
                                                     const err = (ind - load).toFixed(2);
                                                     const mpe = selectedReport.form1_results?.mpe_values ? selectedReport.form1_results.mpe_values[idx] : '1.0';
-                                                    const pass = Math.abs(err) <= Math.abs(mpe);
+                                                    const loadKey = `load_${load}`;
+                                                    const rowStatus = modifiedResults.form1_results?.[loadKey]?.asc_status || (Math.abs(err) <= Math.abs(mpe) ? 'PASS' : 'FAIL');
+                                                    const proof = selectedReport.reading_proofs?.[`weighing_${load}`];
+
                                                     return (
                                                         <tr key={idx} style={{ borderBottom: '1px solid #E2E8F0', textAlign: 'center' }}>
-                                                            <td style={{ padding: '8px' }}>{load} kg</td>
+                                                            <td style={{ padding: '8px', fontWeight: 600 }}>{load} kg</td>
                                                             <td style={{ padding: '8px' }}>{ind} kg</td>
-                                                            <td style={{ padding: '8px', fontWeight: 600, color: pass ? '#059669' : '#DC2626' }}>{err} g</td>
-                                                            <td style={{ padding: '8px' }}>&plusmn;{mpe} g</td>
+                                                            <td style={{ padding: '8px', fontWeight: 600, color: rowStatus === 'PASS' ? '#059669' : '#DC2626' }}>{err} g</td>
+                                                            <td style={{ padding: '8px', fontFamily: 'monospace' }}>&plusmn;{mpe} g</td>
                                                             <td style={{ padding: '8px' }}>
-                                                                <span className={`status-badge ${pass ? 'status-pass' : 'status-fail'}`} style={{ fontSize: '0.7rem' }}>
-                                                                    {pass ? 'PASS' : 'FAIL'}
-                                                                </span>
+                                                                {proof?.url ? (
+                                                                    <div style={{ display: 'flex', alignItems: 'center', gap: '6px', justifyContent: 'center' }}>
+                                                                        <img src={getOptimizedCloudinaryUrl(proof.url, 120)} alt="Proof" style={{ width: '36px', height: '36px', borderRadius: '4px', objectFit: 'cover', cursor: 'pointer' }} onClick={() => setPreviewPhoto(proof.url)} />
+                                                                        <span style={{ fontSize: '0.68rem', color: '#047857', fontWeight: 700 }}>✓ Lab GPS</span>
+                                                                    </div>
+                                                                ) : <span style={{ color: '#94a3b8', fontSize: '0.75rem' }}>No proof</span>}
+                                                            </td>
+                                                            <td style={{ padding: '8px' }}>
+                                                                <button
+                                                                    onClick={() => toggleForm1RowStatus(loadKey)}
+                                                                    className={`status-badge ${rowStatus === 'PASS' ? 'status-pass' : 'status-fail'}`}
+                                                                    style={{ border: 'none', cursor: 'pointer', fontSize: '0.75rem', padding: '4px 10px' }}
+                                                                    title="Click to cross-check & modify result"
+                                                                >
+                                                                    {rowStatus === 'PASS' ? '✓ PASS' : '❌ FAIL'}
+                                                                </button>
                                                             </td>
                                                         </tr>
                                                     );
                                                 })
                                             ) : (
                                                 <tr>
-                                                    <td colSpan="5" style={{ textAlign: 'center', padding: '12px', color: '#94a3b8' }}>Visual test readings recorded & verified clean.</td>
+                                                    <td colSpan="6" style={{ textAlign: 'center', padding: '12px', color: '#94a3b8' }}>Weighing performance readings recorded clean.</td>
                                                 </tr>
                                             )}
                                         </tbody>
                                     </table>
                                 </div>
 
-                                {/* Photo Proof */}
-                                {selectedReport.evidence_register?.form1_photo && (
-                                    <div style={{ marginBottom: '14px' }}>
-                                        <div style={{ fontSize: '0.75rem', fontWeight: 700, color: '#64748b', marginBottom: '6px' }}>ATTACHED PHOTO PROOF:</div>
-                                        <img
-                                            src={selectedReport.evidence_register.form1_photo}
-                                            alt="Weighing Performance Proof"
-                                            onClick={() => setPreviewPhoto(selectedReport.evidence_register.form1_photo)}
-                                            style={{ height: '90px', borderRadius: '6px', border: '1px solid #CBD5E1', cursor: 'pointer', objectFit: 'cover' }}
-                                        />
-                                    </div>
-                                )}
-
-                                {/* Row-Level Comment Input */}
                                 <div style={{ background: '#FFFBEB', border: '1px solid #FDE68A', padding: '12px', borderRadius: '6px' }}>
                                     <label style={{ display: 'block', fontSize: '0.75rem', fontWeight: 700, color: '#92400E', marginBottom: '4px' }}>
-                                        <i className="fas fa-comment-alt" style={{ marginRight: '4px' }}></i> Viewer Comment for Weighing Performance Section:
+                                        <i className="fas fa-comment-alt" style={{ marginRight: '4px' }}></i> Viewer Correction Note for Weighing Performance Section:
                                     </label>
                                     <input
                                         type="text"
@@ -687,34 +727,35 @@ export default function ViewerDashboardPage() {
                                 </div>
                             </div>
 
-                            {/* Test 2: Form 2 - Repeatability Test */}
+                            {/* Section 3: Repeatability Test (Form 2) */}
                             <div className="form-card" style={{ padding: '20px', borderLeft: '4px solid #F29F67', marginBottom: 0 }}>
                                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '14px' }}>
                                     <h3 style={{ fontSize: '1rem', fontWeight: 600, fontFamily: 'Outfit, sans-serif', margin: 0, color: '#0F172A' }}>
                                         3. Repeatability Test (Form 2)
                                     </h3>
                                     <span style={{ fontSize: '0.75rem', background: '#F1F5F9', color: '#475569', padding: '3px 8px', borderRadius: '4px', fontWeight: 700 }}>
-                                        OIML R76-1 Clause A.4.10
+                                        OIML R76-1 Clause 3.6.1 / Annex A.4.4
                                     </span>
                                 </div>
 
                                 <div style={{ background: '#F8FAFC', padding: '12px', borderRadius: '6px', marginBottom: '12px', fontSize: '0.85rem', color: '#475569', border: '1px solid #E2E8F0' }}>
-                                    <strong style={{ color: '#1E293B' }}>Clause Rule:</strong> Difference between max and min indication for repeated loads must not exceed maximum permissible error (mpe) for that load.
+                                    <strong style={{ color: '#1E293B' }}>Clause Calculation Rule:</strong> Max difference between repeated readings must not exceed MPE limit.
                                 </div>
 
-                                {selectedReport.evidence_register?.form2_photo && (
-                                    <div style={{ marginBottom: '14px' }}>
-                                        <div style={{ fontSize: '0.75rem', fontWeight: 700, color: '#64748b', marginBottom: '6px' }}>ATTACHED PHOTO PROOF:</div>
-                                        <img
-                                            src={selectedReport.evidence_register.form2_photo}
-                                            alt="Repeatability Proof"
-                                            onClick={() => setPreviewPhoto(selectedReport.evidence_register.form2_photo)}
-                                            style={{ height: '90px', borderRadius: '6px', border: '1px solid #CBD5E1', cursor: 'pointer', objectFit: 'cover' }}
-                                        />
+                                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', background: '#F1F5F9', padding: '12px 16px', borderRadius: '6px', marginBottom: '14px' }}>
+                                    <div>
+                                        <strong>Max Range Variation:</strong> {((selectedReport.form2_results?.range || 0) * 1000).toFixed(1)} g &bull; 
+                                        <strong> MPE Limit:</strong> &plusmn;{((selectedReport.form2_results?.limit || 0) * 1000).toFixed(1)} g
                                     </div>
-                                )}
+                                    <button
+                                        onClick={toggleForm2Status}
+                                        className={`status-badge ${modifiedResults.form2_results?.Repeatability === 'PASS' ? 'status-pass' : 'status-fail'}`}
+                                        style={{ border: 'none', cursor: 'pointer', fontSize: '0.78rem', padding: '4px 12px' }}
+                                    >
+                                        {modifiedResults.form2_results?.Repeatability === 'PASS' ? '✓ PASS' : '❌ FAIL'}
+                                    </button>
+                                </div>
 
-                                {/* Row-Level Comment Input */}
                                 <div style={{ background: '#FFFBEB', border: '1px solid #FDE68A', padding: '12px', borderRadius: '6px' }}>
                                     <label style={{ display: 'block', fontSize: '0.75rem', fontWeight: 700, color: '#92400E', marginBottom: '4px' }}>
                                         <i className="fas fa-comment-alt" style={{ marginRight: '4px' }}></i> Viewer Comment for Repeatability Section:
@@ -730,34 +771,72 @@ export default function ViewerDashboardPage() {
                                 </div>
                             </div>
 
-                            {/* Test 3: Form 3 - Eccentricity Test */}
+                            {/* Section 4: Eccentricity Test (Form 3) */}
                             <div className="form-card" style={{ padding: '20px', borderLeft: '4px solid #3B8FF3', marginBottom: 0 }}>
                                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '14px' }}>
                                     <h3 style={{ fontSize: '1rem', fontWeight: 600, fontFamily: 'Outfit, sans-serif', margin: 0, color: '#0F172A' }}>
                                         4. Eccentricity Off-Center Loading Test (Form 3)
                                     </h3>
                                     <span style={{ fontSize: '0.75rem', background: '#F1F5F9', color: '#475569', padding: '3px 8px', borderRadius: '4px', fontWeight: 700 }}>
-                                        OIML R76-1 Clause A.4.7
+                                        OIML R76-1 Clause 3.6.2 / Annex A.4.7
                                     </span>
                                 </div>
 
                                 <div style={{ background: '#F8FAFC', padding: '12px', borderRadius: '6px', marginBottom: '12px', fontSize: '0.85rem', color: '#475569', border: '1px solid #E2E8F0' }}>
-                                    <strong style={{ color: '#1E293B' }}>Clause Rule:</strong> Load applied to off-center positions (corners 1 to 4 and center 5). Error at each position must remain within mpe.
+                                    <strong style={{ color: '#1E293B' }}>Clause Calculation Rule:</strong> Error at each off-center position (front, right, rear, left, center) must remain within MPE.
                                 </div>
 
-                                {selectedReport.evidence_register?.form3_photo && (
-                                    <div style={{ marginBottom: '14px' }}>
-                                        <div style={{ fontSize: '0.75rem', fontWeight: 700, color: '#64748b', marginBottom: '6px' }}>ATTACHED PHOTO PROOF:</div>
-                                        <img
-                                            src={selectedReport.evidence_register.form3_photo}
-                                            alt="Eccentricity Proof"
-                                            onClick={() => setPreviewPhoto(selectedReport.evidence_register.form3_photo)}
-                                            style={{ height: '90px', borderRadius: '6px', border: '1px solid #CBD5E1', cursor: 'pointer', objectFit: 'cover' }}
-                                        />
-                                    </div>
-                                )}
+                                <div style={{ overflowX: 'auto', marginBottom: '14px' }}>
+                                    <table style={{ width: '100%', fontSize: '0.85rem' }}>
+                                        <thead>
+                                            <tr style={{ background: '#F1F5F9' }}>
+                                                <th style={{ padding: '8px' }}>Position</th>
+                                                <th style={{ padding: '8px' }}>Applied (kg)</th>
+                                                <th style={{ padding: '8px' }}>Indication (kg)</th>
+                                                <th style={{ padding: '8px' }}>Calculated Error</th>
+                                                <th style={{ padding: '8px' }}>Allowed MPE</th>
+                                                <th style={{ padding: '8px' }}>Position Proof</th>
+                                                <th style={{ padding: '8px' }}>Viewer Cross-Check Result</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            {selectedReport.form3_results?.details ? (
+                                                Object.entries(selectedReport.form3_results.details).map(([pos, d]) => {
+                                                    const posStatus = modifiedResults.form3_results?.details?.[pos]?.result || d.result || 'PASS';
+                                                    const proof = selectedReport.reading_proofs?.[`eccentricity_${pos}`];
+                                                    return (
+                                                        <tr key={pos} style={{ borderBottom: '1px solid #E2E8F0', textAlign: 'center' }}>
+                                                            <td style={{ padding: '8px', textTransform: 'capitalize', fontWeight: 600 }}>{pos}</td>
+                                                            <td style={{ padding: '8px' }}>{d.appliedLoad}</td>
+                                                            <td style={{ padding: '8px' }}>{d.indication}</td>
+                                                            <td style={{ padding: '8px', fontFamily: 'monospace' }}>{(d.error * 1000).toFixed(1)} g</td>
+                                                            <td style={{ padding: '8px', fontFamily: 'monospace' }}>&plusmn;{(d.limit * 1000).toFixed(1)} g</td>
+                                                            <td style={{ padding: '8px' }}>
+                                                                {proof?.url ? (
+                                                                    <img src={getOptimizedCloudinaryUrl(proof.url, 120)} alt="Proof" style={{ width: '36px', height: '36px', borderRadius: '4px', objectFit: 'cover', cursor: 'pointer' }} onClick={() => setPreviewPhoto(proof.url)} />
+                                                                ) : <span style={{ color: '#94a3b8', fontSize: '0.75rem' }}>No proof</span>}
+                                                            </td>
+                                                            <td style={{ padding: '8px' }}>
+                                                                <button
+                                                                    onClick={() => toggleForm3PosStatus(pos)}
+                                                                    className={`status-badge ${posStatus === 'PASS' ? 'status-pass' : 'status-fail'}`}
+                                                                    style={{ border: 'none', cursor: 'pointer', fontSize: '0.75rem', padding: '4px 10px' }}
+                                                                >
+                                                                    {posStatus === 'PASS' ? '✓ PASS' : '❌ FAIL'}
+                                                                </button>
+                                                            </td>
+                                                        </tr>
+                                                    );
+                                                })
+                                            ) : (
+                                                <tr>
+                                                    <td colSpan="7" style={{ textAlign: 'center', padding: '12px', color: '#94a3b8' }}>Eccentricity readings clean.</td>
+                                                </tr>
+                                            )}
+                                        </tbody>
+                                    </table>
+                                </div>
 
-                                {/* Row-Level Comment Input */}
                                 <div style={{ background: '#FFFBEB', border: '1px solid #FDE68A', padding: '12px', borderRadius: '6px' }}>
                                     <label style={{ display: 'block', fontSize: '0.75rem', fontWeight: 700, color: '#92400E', marginBottom: '4px' }}>
                                         <i className="fas fa-comment-alt" style={{ marginRight: '4px' }}></i> Viewer Comment for Eccentricity Section:
@@ -773,11 +852,55 @@ export default function ViewerDashboardPage() {
                                 </div>
                             </div>
 
+                            {/* Section 5: Zero, Tare, & Tilt Tests */}
+                            {[
+                                { name: "Zero-Setting Test", formKey: "form_zero_results", resKey: "ZeroSetting", proofKey: "zero_setting", clause: "Clause 3.8.1 / Annex A.4.2" },
+                                { name: "Tare Accuracy Test", formKey: "form_tare_results", resKey: "TareAccuracy", proofKey: "tare_accuracy", clause: "Clause 3.5.3.4 / Annex A.4.6" },
+                                { name: "Tilt Test", formKey: "form_tilt_results", resKey: "TiltTest", proofKey: "tilt_test", clause: "Clause 3.9.1 / Annex A.5" }
+                            ].map(t => {
+                                const data = selectedReport[t.formKey];
+                                if (!data) return null;
+                                const status = modifiedResults[t.formKey]?.[t.resKey] || data[t.resKey] || 'PASS';
+                                const proof = selectedReport.reading_proofs?.[t.proofKey];
+
+                                return (
+                                    <div className="form-card" style={{ padding: '20px', borderLeft: '4px solid #10B981', marginBottom: 0 }} key={t.name}>
+                                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '12px' }}>
+                                            <h3 style={{ fontSize: '1rem', fontWeight: 600, fontFamily: 'Outfit, sans-serif', margin: 0, color: '#0F172A' }}>
+                                                {t.name}
+                                            </h3>
+                                            <span style={{ fontSize: '0.75rem', background: '#F1F5F9', color: '#475569', padding: '3px 8px', borderRadius: '4px', fontWeight: 700 }}>
+                                                OIML R76-1 {t.clause}
+                                            </span>
+                                        </div>
+
+                                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', background: '#F8FAFC', padding: '12px 16px', borderRadius: '6px', marginBottom: '12px' }}>
+                                            <div style={{ fontSize: '0.85rem' }}>
+                                                <strong>Calculated Error:</strong> {data.error_g !== undefined ? `${data.error_g} g` : `${data.x_error_g || 0} g`} &bull; 
+                                                <strong> Allowed MPE Limit:</strong> &plusmn;{data.limit_g !== undefined ? `${data.limit_g} g` : '1.0 e'}
+                                            </div>
+                                            <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                                                {proof?.url && (
+                                                    <img src={getOptimizedCloudinaryUrl(proof.url, 120)} alt="Proof" style={{ width: '36px', height: '36px', borderRadius: '4px', objectFit: 'cover', cursor: 'pointer' }} onClick={() => setPreviewPhoto(proof.url)} />
+                                                )}
+                                                <button
+                                                    onClick={() => toggleSimpleStatus(t.formKey, t.resKey)}
+                                                    className={`status-badge ${status === 'PASS' ? 'status-pass' : 'status-fail'}`}
+                                                    style={{ border: 'none', cursor: 'pointer', fontSize: '0.78rem', padding: '4px 12px' }}
+                                                >
+                                                    {status === 'PASS' ? '✓ PASS' : '❌ FAIL'}
+                                                </button>
+                                            </div>
+                                        </div>
+                                    </div>
+                                );
+                            })}
+
                             {/* General Summary Review Note */}
                             <div className="form-card" style={{ padding: '20px', marginBottom: 0 }}>
                                 <label style={{ display: 'block', fontSize: '0.85rem', fontWeight: 700, color: '#1e293b', marginBottom: '6px' }}>
                                     <i className="fas fa-edit" style={{ color: '#F29F67', marginRight: '6px' }}></i>
-                                    Overall Technical Audit Summary Note (Optional for approval, recorded in audit chain):
+                                    Overall Technical Audit Summary Note (Recorded in official audit trail):
                                 </label>
                                 <textarea
                                     className="form-input"
@@ -791,7 +914,7 @@ export default function ViewerDashboardPage() {
 
                         </div>
 
-                        {/* 4. Decision Actions (Persistent Bottom Sticky Footer) */}
+                        {/* Decision Actions Persistent Bottom Sticky Footer */}
                         <div style={{
                             background: '#FFFFFF',
                             borderTop: '1px solid #E4E7ED',
@@ -803,17 +926,16 @@ export default function ViewerDashboardPage() {
                             <div style={{ fontSize: '0.85rem', color: '#64748b' }}>
                                 {hasAnyComment() ? (
                                     <span style={{ color: '#D97706', fontWeight: 600 }}>
-                                        <i className="fas fa-info-circle"></i> Comments attached. Ready to submit or return.
+                                        <i className="fas fa-info-circle"></i> Comments attached. Ready to forward or return.
                                     </span>
                                 ) : (
                                     <span>
-                                        <i className="fas fa-shield-alt"></i> Inspection values are read-only to preserve audit trail.
+                                        <i className="fas fa-shield-alt"></i> Quality Reviewer cross-check enabled. Modifying results will update report audit trail.
                                     </span>
                                 )}
                             </div>
 
                             <div style={{ display: 'flex', gap: '12px' }}>
-                                {/* Action 1: Reject — Send Back to Tester */}
                                 <button
                                     onClick={() => handleDecision('REJECT')}
                                     disabled={submittingAction || !hasAnyComment()}
@@ -833,7 +955,6 @@ export default function ViewerDashboardPage() {
                                     Reject — Send Back to Tester
                                 </button>
 
-                                {/* Action 2: Send to Admin for Approval */}
                                 <button
                                     onClick={() => handleDecision('APPROVE')}
                                     disabled={submittingAction}
@@ -853,7 +974,7 @@ export default function ViewerDashboardPage() {
                                         </>
                                     ) : (
                                         <>
-                                            <i className="fas fa-paper-plane"></i> Send to Admin for Approval
+                                            <i className="fas fa-paper-plane"></i> Approve & Send to Admin Dashboard
                                         </>
                                     )}
                                 </button>

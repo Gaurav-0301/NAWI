@@ -1,10 +1,12 @@
 import React, { useState, useEffect } from 'react';
-import { useParams } from 'react-router-dom';
+import { useParams, Link } from 'react-router-dom';
 import { QRCodeSVG } from 'qrcode.react';
 import { SkeletonReportPage } from '../components/SkeletonLoader';
+import { useAuth } from '../context/AuthContext';
 
 export default function CertificatePage() {
     const { id } = useParams();
+    const { user } = useAuth();
     const [report, setReport] = useState(null);
     const [loading, setLoading] = useState(true);
 
@@ -24,6 +26,26 @@ export default function CertificatePage() {
             <SkeletonReportPage />
         </div>
     );
+
+    if (user?.role === 'tester') {
+        return (
+            <div style={{ background: '#f8fafc', minHeight: '100vh', padding: '40px 20px', display: 'flex', justifyContent: 'center', alignItems: 'center', fontFamily: 'Plus Jakarta Sans, sans-serif' }}>
+                <div style={{ background: 'white', border: '1px solid #cbd5e1', borderRadius: '12px', padding: '32px', maxWidth: '540px', textAlign: 'center', boxShadow: '0 10px 25px rgba(0,0,0,0.08)' }}>
+                    <div style={{ width: '64px', height: '64px', background: '#FEF2F2', color: '#DC2626', borderRadius: '50%', display: 'grid', placeItems: 'center', fontSize: '28px', margin: '0 auto 16px' }}>
+                        <i className="fas fa-lock"></i>
+                    </div>
+                    <h2 style={{ fontSize: '1.4rem', color: '#1e293b', marginBottom: '8px' }}>Certificate Generation Restricted</h2>
+                    <p style={{ color: '#64748b', fontSize: '0.92rem', lineHeight: '1.5', marginBottom: '24px' }}>
+                        Certificate generation is disabled for the <strong>Tester</strong> role. Your test execution report has been sent to the <strong>Viewer Dashboard</strong> for technical review & approval.
+                    </p>
+                    <Link to={`/report/${id}`} style={{ background: '#F29F67', color: 'white', textDecoration: 'none', padding: '12px 24px', borderRadius: '8px', fontWeight: 600, display: 'inline-block' }}>
+                        <i className="fas fa-arrow-left"></i> View Submitted Test Report
+                    </Link>
+                </div>
+            </div>
+        );
+    }
+
     if (!report) return <div style={{ padding: '40px', textAlign: 'center', color: 'red' }}>Report not found!</div>;
 
     let overallPass = true;

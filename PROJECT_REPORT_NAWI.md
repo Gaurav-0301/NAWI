@@ -17,15 +17,15 @@
 
 Problem Statement: PS 26035 / PS 36 - Smart India Hackathon
 Domain: Legal Metrology & Industrial Inspection Automation
-Team Name: Bytebrigade
+Team Name: Schrodinger’s Incident
 
 Lead Developers & Team Members:
-1. Nishant (Lead Architect & Full Stack Developer)
-2. Team Bytebrigade Members
+1. Gaurav (Lead Architect & Full Stack Developer)
+2. Schrodinger’s Incident
 
 Repository & Implementation: NAWI Reported Production Engine
 Database Engine: MongoDB Atlas / Mongoose ODM
-Application Framework: Node.js, Express.js, EJS, ES6+, Gemini AI Engine
+Application Framework: Node.js, Express.js, EJS, ES6+,vite react
 ========================================================================================
 ```
 
@@ -33,7 +33,7 @@ Application Framework: Node.js, Express.js, EJS, ES6+, Gemini AI Engine
 
 ## 2. Abstract / Executive Summary
 
-The **NAWI REPORTED** project is an end-to-end, web-based digital platform engineered to automate the verification, evaluation, and test report generation for Non-Automatic Weighing Instruments (NAWI) in accordance with international **OIML R-76** standard specifications and Legal Metrology guidelines. 
+The **NAWI** project is an end-to-end, web-based digital platform engineered to automate the verification, evaluation, and test report generation for Non-Automatic Weighing Instruments (NAWI) in accordance with international **OIML R-76** standard specifications and Legal Metrology guidelines. 
 
 Traditionally, legal metrology inspectors and calibration laboratories rely on manual paper-based logbooks, hand-calculated Maximum Permissible Error (MPE) thresholds, and disconnected spreadsheets. This legacy process suffers from high error rates, manual interpolation mistakes, lack of tamper-proof audit trails, and slow certificate generation turnaround.
 

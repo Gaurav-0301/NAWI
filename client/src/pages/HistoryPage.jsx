@@ -1,13 +1,14 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import Sidebar from '../components/Sidebar';
 import Header from '../components/Header';
 import { useAuth } from '../context/AuthContext';
 import { SkeletonTable } from '../components/SkeletonLoader';
+import { cachedFetch } from '../utils/apiCache';
 
 export default function HistoryPage() {
     const navigate = useNavigate();
-    const { authFetch } = useAuth();
+    const { authFetch, user } = useAuth();
 
     const [reports, setReports] = useState([]);
     const [activeTab, setActiveTab] = useState('all'); // 'all' | 'rejected'
@@ -18,8 +19,7 @@ export default function HistoryPage() {
     const [loading, setLoading] = useState(true);
 
     useEffect(() => {
-        authFetch('/api/history')
-            .then(res => res.json())
+        cachedFetch(authFetch, '/api/history')
             .then(data => {
                 if (Array.isArray(data)) {
                     setReports(data);
@@ -29,28 +29,31 @@ export default function HistoryPage() {
             .finally(() => setLoading(false));
     }, [authFetch]);
 
-    const rejectedReports = reports.filter(r => 
-        ['REJECTED_BY_VIEWER', 'REJECTED_BY_ADMIN', 'SENT_BACK_TO_TESTER'].includes(r.workflow_status)
-    );
+    const rejectedReports = useMemo(() => {
+        return reports.filter(r => 
+            ['REJECTED_BY_VIEWER', 'REJECTED_BY_ADMIN', 'SENT_BACK_TO_TESTER'].includes(r.workflow_status)
+        );
+    }, [reports]);
 
-    const reportsToDisplay = activeTab === 'rejected' ? rejectedReports : reports;
+    const filteredReports = useMemo(() => {
+        const reportsToDisplay = activeTab === 'rejected' ? rejectedReports : reports;
+        return reportsToDisplay.filter(r => {
+            const idStr = r._id ? r._id.substring(0, 8).toUpperCase() : '';
+            const instStr = (r.instrument_id || '').toUpperCase();
+            const snStr = (r.serial_no || '').toUpperCase();
+            const fullSearch = `${idStr} ${instStr} ${snStr}`;
 
-    const filteredReports = reportsToDisplay.filter(r => {
-        const idStr = r._id ? r._id.substring(0, 8).toUpperCase() : '';
-        const instStr = (r.instrument_id || '').toUpperCase();
-        const snStr = (r.serial_no || '').toUpperCase();
-        const fullSearch = `${idStr} ${instStr} ${snStr}`;
+            if (searchTerm && !fullSearch.includes(searchTerm.toUpperCase())) return false;
+            if (filterStatus && r.status !== filterStatus) return false;
+            if (filterClass && !r.accuracy_class.includes(filterClass)) return false;
+            if (filterDate) {
+                const dateStr = new Date(r.createdAt).toISOString().split('T')[0];
+                if (dateStr !== filterDate) return false;
+            }
 
-        if (searchTerm && !fullSearch.includes(searchTerm.toUpperCase())) return false;
-        if (filterStatus && r.status !== filterStatus) return false;
-        if (filterClass && !r.accuracy_class.includes(filterClass)) return false;
-        if (filterDate) {
-            const dateStr = new Date(r.createdAt).toISOString().split('T')[0];
-            if (dateStr !== filterDate) return false;
-        }
-
-        return true;
-    });
+            return true;
+        });
+    }, [reports, activeTab, rejectedReports, searchTerm, filterStatus, filterClass, filterDate]);
 
     const handleReTest = (report, e) => {
         e.stopPropagation();
@@ -205,9 +208,15 @@ export default function HistoryPage() {
                                                     </span>
                                                 </td>
                                                 <td>
-                                                    <span className={`status-badge ${r.status === 'PASS' ? 'status-pass' : 'status-fail'}`}>
-                                                        {r.status}
-                                                    </span>
+                                                    {user?.role === 'tester' ? (
+                                                        <span className="status-badge" style={{ background: '#E0F2FE', color: '#0369A1', border: '1px solid #BAE6FD' }}>
+                                                            <i className="fas fa-paper-plane" style={{ marginRight: '4px' }}></i> SUBMITTED
+                                                        </span>
+                                                    ) : (
+                                                        <span className={`status-badge ${r.status === 'PASS' ? 'status-pass' : 'status-fail'}`}>
+                                                            {r.status}
+                                                        </span>
+                                                    )}
                                                 </td>
                                                 <td>
                                                     {isRejected ? (

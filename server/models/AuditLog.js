@@ -7,5 +7,7 @@ const AuditLogSchema = new mongoose.Schema({
     createdAt: { type: Date, default: Date.now }
 });
 
+AuditLogSchema.index({ createdAt: -1 });
+
 const AuditLog = mongoose.model("AuditLog", AuditLogSchema);
 module.exports = AuditLog;
