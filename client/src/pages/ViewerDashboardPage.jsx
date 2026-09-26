@@ -2,10 +2,10 @@ import React, { useState, useEffect } from 'react';
 import Sidebar from '../components/Sidebar';
 import Header from '../components/Header';
 import { useAuth } from '../context/AuthContext';
-import { SkeletonDashboard, SkeletonTable } from '../components/SkeletonLoader';
+import { SkeletonTable } from '../components/SkeletonLoader';
 
 export default function ViewerDashboardPage() {
-    const { authFetch, showToast, user } = useAuth();
+    const { authFetch, showToast } = useAuth();
 
     // Stats State
     const [stats, setStats] = useState({
@@ -20,6 +20,11 @@ export default function ViewerDashboardPage() {
     const [reports, setReports] = useState([]);
     const [loading, setLoading] = useState(true);
     const [statsLoading, setStatsLoading] = useState(true);
+
+    // Search and Filters
+    const [searchTerm, setSearchTerm] = useState('');
+    const [filterStatus, setFilterStatus] = useState('');
+    const [filterClass, setFilterClass] = useState('');
 
     // Selected Report for Review Modal / Drawer
     const [selectedReport, setSelectedReport] = useState(null);
@@ -139,6 +144,21 @@ export default function ViewerDashboardPage() {
         }
     };
 
+    // Filter reports based on search and dropdown filters
+    const filteredReports = reports.filter(r => {
+        const idStr = r._id ? r._id.substring(0, 8).toUpperCase() : '';
+        const instStr = (r.instrument_id || '').toUpperCase();
+        const testerStr = (r.createdBy || '').toUpperCase();
+        const snStr = (r.serial_no || '').toUpperCase();
+        const fullSearch = `${idStr} ${instStr} ${testerStr} ${snStr}`;
+
+        if (searchTerm && !fullSearch.includes(searchTerm.toUpperCase())) return false;
+        if (filterStatus && r.status !== filterStatus) return false;
+        if (filterClass && !r.accuracy_class.includes(filterClass)) return false;
+
+        return true;
+    });
+
     return (
         <div className="app-wrapper">
             <Sidebar />
@@ -146,151 +166,185 @@ export default function ViewerDashboardPage() {
                 <Header title="Quality Reviewer Technical Portal" />
                 <div className="app-content">
 
-                    {/* Page Title & Role Description */}
+                    {/* Page Title & Description matching HistoryPage style */}
                     <div style={{ marginBottom: '24px' }}>
-                        <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '4px' }}>
-                            <h2 style={{ fontSize: '1.6rem', margin: 0, fontWeight: 700, color: '#1e293b' }}>
-                                TECHNICAL REVIEW QUEUE
-                            </h2>
-                            <span style={{ background: 'rgba(59, 143, 243, 0.15)', color: '#3B8FF3', padding: '4px 12px', borderRadius: '12px', fontSize: '0.8rem', fontWeight: 700 }}>
-                                ISO / OIML Quality Gate
-                            </span>
-                        </div>
-                        <p style={{ color: '#64748b', margin: 0, fontSize: '0.95rem' }}>
+                        <h2 style={{ fontSize: '1.6rem', margin: '0 0 6px 0', fontFamily: 'Outfit, sans-serif', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.5px' }}>
+                            TECHNICAL REVIEW QUEUE
+                        </h2>
+                        <p style={{ color: '#64748b', fontSize: '0.95rem' }}>
                             Auditing submitted NAWI inspection reports for metrological compliance prior to final administrator sign-off.
                         </p>
                     </div>
 
-                    {/* 1. Overview / Analytics Section */}
-                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: '16px', marginBottom: '28px' }}>
+                    {/* 1. Overview / Analytics Section (Matching App Theme Cards) */}
+                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: '16px', marginBottom: '24px' }}>
                         {/* Card 1: Registered Labs / Testers */}
-                        <div className="form-card" style={{ padding: '20px', display: 'flex', alignItems: 'center', gap: '16px' }}>
-                            <div style={{ width: '48px', height: '48px', borderRadius: '12px', background: '#F1F5F9', color: '#475569', display: 'grid', placeItems: 'center', fontSize: '1.4rem' }}>
+                        <div className="form-card" style={{ padding: '20px', display: 'flex', alignItems: 'center', gap: '16px', marginBottom: 0 }}>
+                            <div style={{ width: '46px', height: '46px', borderRadius: '10px', background: '#F1F5F9', color: '#475569', display: 'grid', placeItems: 'center', fontSize: '1.3rem' }}>
                                 <i className="fas fa-users-cog"></i>
                             </div>
                             <div>
-                                <div style={{ fontSize: '0.8rem', fontWeight: 700, color: '#64748b', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
+                                <div style={{ fontSize: '0.78rem', fontWeight: 700, color: '#64748b', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
                                     System Testers / Labs
                                 </div>
-                                <div style={{ fontSize: '1.6rem', fontWeight: 800, color: '#0f172a' }}>
+                                <div style={{ fontSize: '1.5rem', fontWeight: 700, color: '#1e293b', fontFamily: 'Outfit, sans-serif' }}>
                                     {statsLoading ? '...' : stats.labsCount}
                                 </div>
                             </div>
                         </div>
 
                         {/* Card 2: Pending Review Queue */}
-                        <div className="form-card" style={{ padding: '20px', display: 'flex', alignItems: 'center', gap: '16px', borderLeft: '4px solid #F29F67' }}>
-                            <div style={{ width: '48px', height: '48px', borderRadius: '12px', background: '#FEF0E6', color: '#F29F67', display: 'grid', placeItems: 'center', fontSize: '1.4rem' }}>
+                        <div className="form-card" style={{ padding: '20px', display: 'flex', alignItems: 'center', gap: '16px', borderLeft: '4px solid #F29F67', marginBottom: 0 }}>
+                            <div style={{ width: '46px', height: '46px', borderRadius: '10px', background: '#FEF0E6', color: '#F29F67', display: 'grid', placeItems: 'center', fontSize: '1.3rem' }}>
                                 <i className="fas fa-hourglass-half"></i>
                             </div>
                             <div>
-                                <div style={{ fontSize: '0.8rem', fontWeight: 700, color: '#64748b', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
+                                <div style={{ fontSize: '0.78rem', fontWeight: 700, color: '#64748b', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
                                     Pending Review Queue
                                 </div>
-                                <div style={{ fontSize: '1.6rem', fontWeight: 800, color: '#D8824C' }}>
+                                <div style={{ fontSize: '1.5rem', fontWeight: 700, color: '#D8824C', fontFamily: 'Outfit, sans-serif' }}>
                                     {statsLoading ? '...' : stats.pendingReviewCount}
                                 </div>
                             </div>
                         </div>
 
                         {/* Card 3: Sent for Admin Approval */}
-                        <div className="form-card" style={{ padding: '20px', display: 'flex', alignItems: 'center', gap: '16px', borderLeft: '4px solid #3B8FF3' }}>
-                            <div style={{ width: '48px', height: '48px', borderRadius: '12px', background: '#EFF6FF', color: '#3B8FF3', display: 'grid', placeItems: 'center', fontSize: '1.4rem' }}>
+                        <div className="form-card" style={{ padding: '20px', display: 'flex', alignItems: 'center', gap: '16px', borderLeft: '4px solid #3B8FF3', marginBottom: 0 }}>
+                            <div style={{ width: '46px', height: '46px', borderRadius: '10px', background: '#EFF6FF', color: '#3B8FF3', display: 'grid', placeItems: 'center', fontSize: '1.3rem' }}>
                                 <i className="fas fa-paper-plane"></i>
                             </div>
                             <div>
-                                <div style={{ fontSize: '0.8rem', fontWeight: 700, color: '#64748b', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
+                                <div style={{ fontSize: '0.78rem', fontWeight: 700, color: '#64748b', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
                                     Awaiting Admin Sign-off
                                 </div>
-                                <div style={{ fontSize: '1.6rem', fontWeight: 800, color: '#2563EB' }}>
+                                <div style={{ fontSize: '1.5rem', fontWeight: 700, color: '#2563EB', fontFamily: 'Outfit, sans-serif' }}>
                                     {statsLoading ? '...' : stats.sentForApprovalCount}
                                 </div>
                             </div>
                         </div>
 
                         {/* Card 4: Certificates Issued */}
-                        <div className="form-card" style={{ padding: '20px', display: 'flex', alignItems: 'center', gap: '16px', borderLeft: '4px solid #10B981' }}>
-                            <div style={{ width: '48px', height: '48px', borderRadius: '12px', background: '#ECFDF5', color: '#10B981', display: 'grid', placeItems: 'center', fontSize: '1.4rem' }}>
+                        <div className="form-card" style={{ padding: '20px', display: 'flex', alignItems: 'center', gap: '16px', borderLeft: '4px solid #34B1AA', marginBottom: 0 }}>
+                            <div style={{ width: '46px', height: '46px', borderRadius: '10px', background: '#ECFDF5', color: '#34B1AA', display: 'grid', placeItems: 'center', fontSize: '1.3rem' }}>
                                 <i className="fas fa-certificate"></i>
                             </div>
                             <div>
-                                <div style={{ fontSize: '0.8rem', fontWeight: 700, color: '#64748b', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
+                                <div style={{ fontSize: '0.78rem', fontWeight: 700, color: '#64748b', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
                                     Certificates Issued
                                 </div>
-                                <div style={{ fontSize: '1.6rem', fontWeight: 800, color: '#059669' }}>
+                                <div style={{ fontSize: '1.5rem', fontWeight: 700, color: '#0f766e', fontFamily: 'Outfit, sans-serif' }}>
                                     {statsLoading ? '...' : stats.certificatesIssuedCount}
                                 </div>
                             </div>
                         </div>
                     </div>
 
-                    {/* 2. Status Tracking Tabs */}
-                    <div style={{ display: 'flex', gap: '12px', borderBottom: '2px solid #E2E8F0', marginBottom: '20px' }}>
-                        <button
-                            onClick={() => setActiveTab('pending')}
-                            style={{
-                                padding: '12px 20px',
-                                fontWeight: 700,
-                                fontSize: '0.9rem',
-                                border: 'none',
-                                background: 'transparent',
-                                cursor: 'pointer',
-                                borderBottom: activeTab === 'pending' ? '3px solid #F29F67' : '3px solid transparent',
-                                color: activeTab === 'pending' ? '#F29F67' : '#64748b',
-                                transition: 'all 0.2s'
-                            }}
-                        >
-                            <i className="fas fa-inbox" style={{ marginRight: '8px' }}></i>
-                            Pending Review ({stats.pendingReviewCount})
-                        </button>
+                    {/* 2. Status Tracking Tabs & Search / Filter Card (Identical to HistoryPage layout) */}
+                    <div className="form-card" style={{ marginBottom: '24px', padding: '20px' }}>
+                        {/* Tab Buttons */}
+                        <div style={{ display: 'flex', gap: '12px', borderBottom: '1px solid #E2E8F0', paddingBottom: '14px', marginBottom: '16px', flexWrap: 'wrap' }}>
+                            <button
+                                onClick={() => setActiveTab('pending')}
+                                style={{
+                                    padding: '8px 16px',
+                                    fontWeight: 700,
+                                    fontSize: '0.88rem',
+                                    fontFamily: 'Plus Jakarta Sans, sans-serif',
+                                    border: 'none',
+                                    borderRadius: '6px',
+                                    cursor: 'pointer',
+                                    background: activeTab === 'pending' ? '#FEF0E6' : '#F1F5F9',
+                                    color: activeTab === 'pending' ? '#D8824C' : '#64748b',
+                                    transition: 'all 0.2s'
+                                }}
+                            >
+                                <i className="fas fa-inbox" style={{ marginRight: '6px' }}></i>
+                                Pending Review ({stats.pendingReviewCount})
+                            </button>
 
-                        <button
-                            onClick={() => setActiveTab('sent')}
-                            style={{
-                                padding: '12px 20px',
-                                fontWeight: 700,
-                                fontSize: '0.9rem',
-                                border: 'none',
-                                background: 'transparent',
-                                cursor: 'pointer',
-                                borderBottom: activeTab === 'sent' ? '3px solid #3B8FF3' : '3px solid transparent',
-                                color: activeTab === 'sent' ? '#3B8FF3' : '#64748b',
-                                transition: 'all 0.2s'
-                            }}
-                        >
-                            <i className="fas fa-paper-plane" style={{ marginRight: '8px' }}></i>
-                            Sent for Approval ({stats.sentForApprovalCount})
-                        </button>
+                            <button
+                                onClick={() => setActiveTab('sent')}
+                                style={{
+                                    padding: '8px 16px',
+                                    fontWeight: 700,
+                                    fontSize: '0.88rem',
+                                    fontFamily: 'Plus Jakarta Sans, sans-serif',
+                                    border: 'none',
+                                    borderRadius: '6px',
+                                    cursor: 'pointer',
+                                    background: activeTab === 'sent' ? '#EFF6FF' : '#F1F5F9',
+                                    color: activeTab === 'sent' ? '#2563EB' : '#64748b',
+                                    transition: 'all 0.2s'
+                                }}
+                            >
+                                <i className="fas fa-paper-plane" style={{ marginRight: '6px' }}></i>
+                                Sent for Approval ({stats.sentForApprovalCount})
+                            </button>
 
-                        <button
-                            onClick={() => setActiveTab('rejected')}
-                            style={{
-                                padding: '12px 20px',
-                                fontWeight: 700,
-                                fontSize: '0.9rem',
-                                border: 'none',
-                                background: 'transparent',
-                                cursor: 'pointer',
-                                borderBottom: activeTab === 'rejected' ? '3px solid #EF4444' : '3px solid transparent',
-                                color: activeTab === 'rejected' ? '#EF4444' : '#64748b',
-                                transition: 'all 0.2s'
-                            }}
-                        >
-                            <i className="fas fa-exclamation-triangle" style={{ marginRight: '8px' }}></i>
-                            Rejected by Admin
-                        </button>
+                            <button
+                                onClick={() => setActiveTab('rejected')}
+                                style={{
+                                    padding: '8px 16px',
+                                    fontWeight: 700,
+                                    fontSize: '0.88rem',
+                                    fontFamily: 'Plus Jakarta Sans, sans-serif',
+                                    border: 'none',
+                                    borderRadius: '6px',
+                                    cursor: 'pointer',
+                                    background: activeTab === 'rejected' ? '#FEF2F2' : '#F1F5F9',
+                                    color: activeTab === 'rejected' ? '#DC2626' : '#64748b',
+                                    transition: 'all 0.2s'
+                                }}
+                            >
+                                <i className="fas fa-exclamation-triangle" style={{ marginRight: '6px' }}></i>
+                                Rejected by Admin
+                            </button>
+                        </div>
+
+                        {/* Search and Filters Input Bar (Identical to HistoryPage) */}
+                        <div style={{ display: 'flex', gap: '16px', flexWrap: 'wrap', alignItems: 'center' }}>
+                            <div style={{ flex: 1, minWidth: '240px', position: 'relative' }}>
+                                <i className="fas fa-search" style={{ position: 'absolute', left: '14px', top: '13px', color: '#94a3b8' }}></i>
+                                <input
+                                    type="text"
+                                    className="form-input"
+                                    style={{ paddingLeft: '38px' }}
+                                    placeholder="Search by Test ID / Serial No / Tester..."
+                                    value={searchTerm}
+                                    onChange={e => setSearchTerm(e.target.value)}
+                                />
+                            </div>
+
+                            <div style={{ width: '140px' }}>
+                                <select className="form-input" value={filterStatus} onChange={e => setFilterStatus(e.target.value)}>
+                                    <option value="">Status: All</option>
+                                    <option value="PASS">PASS</option>
+                                    <option value="FAIL">FAIL</option>
+                                </select>
+                            </div>
+
+                            <div style={{ width: '140px' }}>
+                                <select className="form-input" value={filterClass} onChange={e => setFilterClass(e.target.value)}>
+                                    <option value="">Class: All</option>
+                                    <option value="I">Class I</option>
+                                    <option value="II">Class II</option>
+                                    <option value="III">Class III</option>
+                                    <option value="IIII">Class IIII</option>
+                                </select>
+                            </div>
+                        </div>
                     </div>
 
-                    {/* 3. Pending Review Queue Table */}
+                    {/* 3. Pending Review Queue Table (Identical to HistoryPage table card) */}
                     <div className="table-card">
                         {loading ? (
                             <SkeletonTable rows={5} cols={7} />
-                        ) : reports.length > 0 ? (
+                        ) : filteredReports.length > 0 ? (
                             <table>
                                 <thead>
                                     <tr>
                                         <th>Test ID</th>
-                                        <th>Instrument / Model</th>
+                                        <th>Instrument</th>
                                         <th>Tester Name</th>
                                         <th>Date Submitted</th>
                                         <th>Accuracy Class</th>
@@ -300,9 +354,9 @@ export default function ViewerDashboardPage() {
                                     </tr>
                                 </thead>
                                 <tbody>
-                                    {reports.map((r) => {
+                                    {filteredReports.map((r) => {
                                         const dateObj = new Date(r.createdAt);
-                                        const dateStr = dateObj.toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' });
+                                        const dateStr = dateObj.toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' });
 
                                         return (
                                             <tr key={r._id} className="table-row-hover">
@@ -362,7 +416,7 @@ export default function ViewerDashboardPage() {
                                                         style={{
                                                             padding: '6px 14px',
                                                             fontSize: '0.8rem',
-                                                            fontWeight: 700,
+                                                            fontWeight: 600,
                                                             background: activeTab === 'pending' ? '#F29F67' : '#475569',
                                                             color: 'white',
                                                             border: 'none',
@@ -380,18 +434,16 @@ export default function ViewerDashboardPage() {
                                 </tbody>
                             </table>
                         ) : (
-                            <div style={{ textAlign: 'center', padding: '48px', color: '#94a3b8' }}>
-                                <i className="fas fa-clipboard-check" style={{ fontSize: '2.5rem', marginBottom: '12px', color: '#cbd5e1' }}></i>
-                                <p style={{ fontSize: '1rem', fontWeight: 600, margin: '4px 0' }}>No reports found in this queue.</p>
-                                <p style={{ fontSize: '0.85rem' }}>All submitted reports for this tab have been processed.</p>
-                            </div>
+                            <p style={{ textAlign: 'center', padding: '32px', color: '#94a3b8', margin: 0 }}>
+                                No reports match the selected criteria.
+                            </p>
                         )}
                     </div>
 
                 </div>
             </div>
 
-            {/* 4. Full Report Review Screen (Modal overlay) */}
+            {/* 4. Full Report Review Screen (Modal Overlay matching App Styling) */}
             {reviewModalOpen && selectedReport && (
                 <div style={{
                     position: 'fixed',
@@ -410,13 +462,14 @@ export default function ViewerDashboardPage() {
                     <div style={{
                         background: '#F8FAFC',
                         width: '100%',
-                        maxWidth: '1200px',
+                        maxWidth: '1100px',
                         height: '92vh',
-                        borderRadius: '16px',
+                        borderRadius: '12px',
                         display: 'flex',
                         flexDirection: 'column',
                         boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.25)',
-                        overflow: 'hidden'
+                        overflow: 'hidden',
+                        fontFamily: 'Plus Jakarta Sans, sans-serif'
                     }}>
                         {/* Review Screen Header */}
                         <div style={{
@@ -428,18 +481,16 @@ export default function ViewerDashboardPage() {
                             justifyContent: 'space-between',
                             borderBottom: '1px solid rgba(255,255,255,0.1)'
                         }}>
-                            <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
-                                <div>
-                                    <div style={{ fontSize: '1.2rem', fontWeight: 800, color: '#F29F67' }}>
-                                        TECHNICAL AUDIT — TP-{selectedReport._id.substring(0, 8).toUpperCase()}
-                                    </div>
-                                    <div style={{ fontSize: '0.8rem', color: '#94A3B8' }}>
-                                        Tester: {selectedReport.createdBy || "Nishant"} &bull; Rule Set: {selectedReport.rule_set_version || "OIML R-76 V1"}
-                                    </div>
+                            <div>
+                                <div style={{ fontSize: '1.2rem', fontWeight: 700, color: '#F29F67', fontFamily: 'Outfit, sans-serif' }}>
+                                    TECHNICAL AUDIT — TP-{selectedReport._id.substring(0, 8).toUpperCase()}
+                                </div>
+                                <div style={{ fontSize: '0.8rem', color: '#94A3B8' }}>
+                                    Tester: {selectedReport.createdBy || "Nishant"} &bull; Rule Set: {selectedReport.rule_set_version || "OIML R-76 V1"}
                                 </div>
                             </div>
 
-                            <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginLeft: 'auto' }}>
+                            <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
                                 <span className={`status-badge ${selectedReport.status === 'PASS' ? 'status-pass' : 'status-fail'}`}>
                                     Auto: {selectedReport.status}
                                 </span>
@@ -451,9 +502,9 @@ export default function ViewerDashboardPage() {
                                         color: 'white',
                                         width: '32px',
                                         height: '32px',
-                                        borderRadius: '8px',
+                                        borderRadius: '6px',
                                         cursor: 'pointer',
-                                        fontSize: '1rem'
+                                        fontSize: '1.1rem'
                                     }}
                                 >
                                     &times;
@@ -461,12 +512,12 @@ export default function ViewerDashboardPage() {
                             </div>
                         </div>
 
-                        {/* Review Content Body (Scrollable Split View) */}
+                        {/* Review Content Body */}
                         <div style={{ flex: 1, overflowY: 'auto', padding: '24px', display: 'flex', flexDirection: 'column', gap: '20px' }}>
                             
                             {/* Section A: Instrument & Environmental Characteristics */}
-                            <div className="form-card" style={{ padding: '20px' }}>
-                                <h3 style={{ fontSize: '1.1rem', fontWeight: 700, margin: '0 0 16px 0', color: '#1e293b', display: 'flex', alignItems: 'center', gap: '8px' }}>
+                            <div className="form-card" style={{ padding: '20px', marginBottom: 0 }}>
+                                <h3 style={{ fontSize: '1.05rem', fontWeight: 600, fontFamily: 'Outfit, sans-serif', margin: '0 0 16px 0', color: '#1e293b', display: 'flex', alignItems: 'center', gap: '8px' }}>
                                     <i className="fas fa-balance-scale" style={{ color: '#F29F67' }}></i>
                                     1. Instrument & Metrological Characteristics
                                 </h3>
@@ -503,9 +554,9 @@ export default function ViewerDashboardPage() {
                             {/* Section B: Test Observations, Clause Explanations & Photo Evidence */}
                             
                             {/* Test 1: Form 1 - Weighing Performance Test */}
-                            <div className="form-card" style={{ padding: '20px', borderLeft: '4px solid #34B1AA' }}>
+                            <div className="form-card" style={{ padding: '20px', borderLeft: '4px solid #34B1AA', marginBottom: 0 }}>
                                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '14px' }}>
-                                    <h3 style={{ fontSize: '1.05rem', fontWeight: 700, margin: 0, color: '#0F172A' }}>
+                                    <h3 style={{ fontSize: '1rem', fontWeight: 600, fontFamily: 'Outfit, sans-serif', margin: 0, color: '#0F172A' }}>
                                         2. Weighing Performance Test (Form 1)
                                     </h3>
                                     <span style={{ fontSize: '0.75rem', background: '#F1F5F9', color: '#475569', padding: '3px 8px', borderRadius: '4px', fontWeight: 700 }}>
@@ -513,7 +564,7 @@ export default function ViewerDashboardPage() {
                                     </span>
                                 </div>
 
-                                <div style={{ background: '#F8FAFC', padding: '12px', borderRadius: '8px', marginBottom: '12px', fontSize: '0.85rem', color: '#475569', border: '1px solid #E2E8F0' }}>
+                                <div style={{ background: '#F8FAFC', padding: '12px', borderRadius: '6px', marginBottom: '12px', fontSize: '0.85rem', color: '#475569', border: '1px solid #E2E8F0' }}>
                                     <strong style={{ color: '#1E293B' }}>Clause Rule:</strong> Maximum permissible error (mpe) checked across load range up to Max capacity. Clause A.4.4 specifies tolerance steps &plusmn;0.5e, &plusmn;1.0e, &plusmn;1.5e.
                                 </div>
 
@@ -567,13 +618,13 @@ export default function ViewerDashboardPage() {
                                             src={selectedReport.evidence_register.form1_photo}
                                             alt="Weighing Performance Proof"
                                             onClick={() => setPreviewPhoto(selectedReport.evidence_register.form1_photo)}
-                                            style={{ height: '90px', borderRadius: '8px', border: '1px solid #CBD5E1', cursor: 'pointer', objectFit: 'cover' }}
+                                            style={{ height: '90px', borderRadius: '6px', border: '1px solid #CBD5E1', cursor: 'pointer', objectFit: 'cover' }}
                                         />
                                     </div>
                                 )}
 
                                 {/* Row-Level Comment Input */}
-                                <div style={{ background: '#FFFBEB', border: '1px solid #FDE68A', padding: '12px', borderRadius: '8px' }}>
+                                <div style={{ background: '#FFFBEB', border: '1px solid #FDE68A', padding: '12px', borderRadius: '6px' }}>
                                     <label style={{ display: 'block', fontSize: '0.75rem', fontWeight: 700, color: '#92400E', marginBottom: '4px' }}>
                                         <i className="fas fa-comment-alt" style={{ marginRight: '4px' }}></i> Viewer Comment for Weighing Performance Section:
                                     </label>
@@ -583,15 +634,15 @@ export default function ViewerDashboardPage() {
                                         placeholder="Add specific correction note for Form 1 (or leave blank if verified)..."
                                         value={rowComments['form1'] || ''}
                                         onChange={(e) => handleCommentChange('form1', e.target.value)}
-                                        style={{ fontSize: '0.85rem', background: 'white' }}
+                                        style={{ fontSize: '0.85rem' }}
                                     />
                                 </div>
                             </div>
 
                             {/* Test 2: Form 2 - Repeatability Test */}
-                            <div className="form-card" style={{ padding: '20px', borderLeft: '4px solid #F29F67' }}>
+                            <div className="form-card" style={{ padding: '20px', borderLeft: '4px solid #F29F67', marginBottom: 0 }}>
                                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '14px' }}>
-                                    <h3 style={{ fontSize: '1.05rem', fontWeight: 700, margin: 0, color: '#0F172A' }}>
+                                    <h3 style={{ fontSize: '1rem', fontWeight: 600, fontFamily: 'Outfit, sans-serif', margin: 0, color: '#0F172A' }}>
                                         3. Repeatability Test (Form 2)
                                     </h3>
                                     <span style={{ fontSize: '0.75rem', background: '#F1F5F9', color: '#475569', padding: '3px 8px', borderRadius: '4px', fontWeight: 700 }}>
@@ -599,7 +650,7 @@ export default function ViewerDashboardPage() {
                                     </span>
                                 </div>
 
-                                <div style={{ background: '#F8FAFC', padding: '12px', borderRadius: '8px', marginBottom: '12px', fontSize: '0.85rem', color: '#475569', border: '1px solid #E2E8F0' }}>
+                                <div style={{ background: '#F8FAFC', padding: '12px', borderRadius: '6px', marginBottom: '12px', fontSize: '0.85rem', color: '#475569', border: '1px solid #E2E8F0' }}>
                                     <strong style={{ color: '#1E293B' }}>Clause Rule:</strong> Difference between max and min indication for repeated loads must not exceed maximum permissible error (mpe) for that load.
                                 </div>
 
@@ -610,13 +661,13 @@ export default function ViewerDashboardPage() {
                                             src={selectedReport.evidence_register.form2_photo}
                                             alt="Repeatability Proof"
                                             onClick={() => setPreviewPhoto(selectedReport.evidence_register.form2_photo)}
-                                            style={{ height: '90px', borderRadius: '8px', border: '1px solid #CBD5E1', cursor: 'pointer', objectFit: 'cover' }}
+                                            style={{ height: '90px', borderRadius: '6px', border: '1px solid #CBD5E1', cursor: 'pointer', objectFit: 'cover' }}
                                         />
                                     </div>
                                 )}
 
                                 {/* Row-Level Comment Input */}
-                                <div style={{ background: '#FFFBEB', border: '1px solid #FDE68A', padding: '12px', borderRadius: '8px' }}>
+                                <div style={{ background: '#FFFBEB', border: '1px solid #FDE68A', padding: '12px', borderRadius: '6px' }}>
                                     <label style={{ display: 'block', fontSize: '0.75rem', fontWeight: 700, color: '#92400E', marginBottom: '4px' }}>
                                         <i className="fas fa-comment-alt" style={{ marginRight: '4px' }}></i> Viewer Comment for Repeatability Section:
                                     </label>
@@ -626,15 +677,15 @@ export default function ViewerDashboardPage() {
                                         placeholder="Add specific correction note for Form 2..."
                                         value={rowComments['form2'] || ''}
                                         onChange={(e) => handleCommentChange('form2', e.target.value)}
-                                        style={{ fontSize: '0.85rem', background: 'white' }}
+                                        style={{ fontSize: '0.85rem' }}
                                     />
                                 </div>
                             </div>
 
                             {/* Test 3: Form 3 - Eccentricity Test */}
-                            <div className="form-card" style={{ padding: '20px', borderLeft: '4px solid #3B8FF3' }}>
+                            <div className="form-card" style={{ padding: '20px', borderLeft: '4px solid #3B8FF3', marginBottom: 0 }}>
                                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '14px' }}>
-                                    <h3 style={{ fontSize: '1.05rem', fontWeight: 700, margin: 0, color: '#0F172A' }}>
+                                    <h3 style={{ fontSize: '1rem', fontWeight: 600, fontFamily: 'Outfit, sans-serif', margin: 0, color: '#0F172A' }}>
                                         4. Eccentricity Off-Center Loading Test (Form 3)
                                     </h3>
                                     <span style={{ fontSize: '0.75rem', background: '#F1F5F9', color: '#475569', padding: '3px 8px', borderRadius: '4px', fontWeight: 700 }}>
@@ -642,7 +693,7 @@ export default function ViewerDashboardPage() {
                                     </span>
                                 </div>
 
-                                <div style={{ background: '#F8FAFC', padding: '12px', borderRadius: '8px', marginBottom: '12px', fontSize: '0.85rem', color: '#475569', border: '1px solid #E2E8F0' }}>
+                                <div style={{ background: '#F8FAFC', padding: '12px', borderRadius: '6px', marginBottom: '12px', fontSize: '0.85rem', color: '#475569', border: '1px solid #E2E8F0' }}>
                                     <strong style={{ color: '#1E293B' }}>Clause Rule:</strong> Load applied to off-center positions (corners 1 to 4 and center 5). Error at each position must remain within mpe.
                                 </div>
 
@@ -653,13 +704,13 @@ export default function ViewerDashboardPage() {
                                             src={selectedReport.evidence_register.form3_photo}
                                             alt="Eccentricity Proof"
                                             onClick={() => setPreviewPhoto(selectedReport.evidence_register.form3_photo)}
-                                            style={{ height: '90px', borderRadius: '8px', border: '1px solid #CBD5E1', cursor: 'pointer', objectFit: 'cover' }}
+                                            style={{ height: '90px', borderRadius: '6px', border: '1px solid #CBD5E1', cursor: 'pointer', objectFit: 'cover' }}
                                         />
                                     </div>
                                 )}
 
                                 {/* Row-Level Comment Input */}
-                                <div style={{ background: '#FFFBEB', border: '1px solid #FDE68A', padding: '12px', borderRadius: '8px' }}>
+                                <div style={{ background: '#FFFBEB', border: '1px solid #FDE68A', padding: '12px', borderRadius: '6px' }}>
                                     <label style={{ display: 'block', fontSize: '0.75rem', fontWeight: 700, color: '#92400E', marginBottom: '4px' }}>
                                         <i className="fas fa-comment-alt" style={{ marginRight: '4px' }}></i> Viewer Comment for Eccentricity Section:
                                     </label>
@@ -669,13 +720,13 @@ export default function ViewerDashboardPage() {
                                         placeholder="Add specific correction note for Form 3..."
                                         value={rowComments['form3'] || ''}
                                         onChange={(e) => handleCommentChange('form3', e.target.value)}
-                                        style={{ fontSize: '0.85rem', background: 'white' }}
+                                        style={{ fontSize: '0.85rem' }}
                                     />
                                 </div>
                             </div>
 
                             {/* General Summary Review Note */}
-                            <div className="form-card" style={{ padding: '20px' }}>
+                            <div className="form-card" style={{ padding: '20px', marginBottom: 0 }}>
                                 <label style={{ display: 'block', fontSize: '0.85rem', fontWeight: 700, color: '#1e293b', marginBottom: '6px' }}>
                                     <i className="fas fa-edit" style={{ color: '#F29F67', marginRight: '6px' }}></i>
                                     Overall Technical Audit Summary Note (Optional for approval, recorded in audit chain):
@@ -695,12 +746,11 @@ export default function ViewerDashboardPage() {
                         {/* 4. Decision Actions (Persistent Bottom Sticky Footer) */}
                         <div style={{
                             background: '#FFFFFF',
-                            borderTop: '2px solid #E2E8F0',
+                            borderTop: '1px solid #E4E7ED',
                             padding: '16px 24px',
                             display: 'flex',
                             alignItems: 'center',
-                            justifyContent: 'space-between',
-                            boxShadow: '0 -4px 6px -1px rgba(0,0,0,0.05)'
+                            justifyContent: 'space-between'
                         }}>
                             <div style={{ fontSize: '0.85rem', color: '#64748b' }}>
                                 {hasAnyComment() ? (
@@ -720,19 +770,15 @@ export default function ViewerDashboardPage() {
                                     onClick={() => handleDecision('REJECT')}
                                     disabled={submittingAction || !hasAnyComment()}
                                     title={!hasAnyComment() ? "At least one row-level comment required before rejection" : ""}
+                                    className="btn"
                                     style={{
-                                        padding: '12px 24px',
-                                        borderRadius: '8px',
-                                        fontWeight: 700,
-                                        fontSize: '0.9rem',
-                                        border: 'none',
+                                        padding: '10px 20px',
+                                        fontSize: '0.88rem',
+                                        fontWeight: 600,
                                         cursor: (submittingAction || !hasAnyComment()) ? 'not-allowed' : 'pointer',
                                         background: hasAnyComment() ? '#EF4444' : '#FCA5A5',
                                         color: 'white',
-                                        transition: 'all 0.2s',
-                                        display: 'flex',
-                                        alignItems: 'center',
-                                        gap: '8px'
+                                        boxShadow: 'none'
                                     }}
                                 >
                                     <i className="fas fa-undo"></i>
@@ -743,20 +789,14 @@ export default function ViewerDashboardPage() {
                                 <button
                                     onClick={() => handleDecision('APPROVE')}
                                     disabled={submittingAction}
+                                    className="btn"
                                     style={{
-                                        padding: '12px 24px',
-                                        borderRadius: '8px',
-                                        fontWeight: 700,
-                                        fontSize: '0.9rem',
-                                        border: 'none',
+                                        padding: '10px 20px',
+                                        fontSize: '0.88rem',
+                                        fontWeight: 600,
                                         cursor: submittingAction ? 'not-allowed' : 'pointer',
-                                        background: '#10B981',
-                                        color: 'white',
-                                        boxShadow: '0 4px 6px -1px rgba(16, 185, 129, 0.3)',
-                                        transition: 'all 0.2s',
-                                        display: 'flex',
-                                        alignItems: 'center',
-                                        gap: '8px'
+                                        background: '#34B1AA',
+                                        color: 'white'
                                     }}
                                 >
                                     {submittingAction ? (
