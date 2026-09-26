@@ -89,7 +89,7 @@ export default function ReportDetailedPage() {
                             <p style={{ color: '#64748b' }}>Detailed readings, photo proofs and test observations submitted for review.</p>
                         </div>
                         <div style={{ display: 'flex', gap: '12px', alignItems: 'center' }}>
-                            {user?.role !== 'tester' && (
+                            {user?.role === 'admin' && (
                                 <button className="btn" style={{ background: '#3B8FF3' }} onClick={() => window.open(`/certificate/${report._id}`, '_blank')}>
                                     <i className="fas fa-file-pdf"></i> Save as Certificate PDF
                                 </button>

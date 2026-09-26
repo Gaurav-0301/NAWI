@@ -27,7 +27,7 @@ export default function CertificatePage() {
         </div>
     );
 
-    if (user?.role === 'tester') {
+    if (user?.role !== 'admin') {
         return (
             <div style={{ background: '#f8fafc', minHeight: '100vh', padding: '40px 20px', display: 'flex', justifyContent: 'center', alignItems: 'center', fontFamily: 'Plus Jakarta Sans, sans-serif' }}>
                 <div style={{ background: 'white', border: '1px solid #cbd5e1', borderRadius: '12px', padding: '32px', maxWidth: '540px', textAlign: 'center', boxShadow: '0 10px 25px rgba(0,0,0,0.08)' }}>
@@ -36,10 +36,10 @@ export default function CertificatePage() {
                     </div>
                     <h2 style={{ fontSize: '1.4rem', color: '#1e293b', marginBottom: '8px' }}>Certificate Generation Restricted</h2>
                     <p style={{ color: '#64748b', fontSize: '0.92rem', lineHeight: '1.5', marginBottom: '24px' }}>
-                        Certificate generation is disabled for the <strong>Tester</strong> role. Your test execution report has been sent to the <strong>Viewer Dashboard</strong> for technical review & approval.
+                        Certificate generation is reserved strictly for the <strong>Administrator</strong> role. {user?.role === 'viewer' ? 'As a Quality Reviewer, please audit the test report readings & proofs and send to Admin for approval.' : 'Your test report has been submitted to the Viewer Dashboard for review.'}
                     </p>
                     <Link to={`/report/${id}`} style={{ background: '#F29F67', color: 'white', textDecoration: 'none', padding: '12px 24px', borderRadius: '8px', fontWeight: 600, display: 'inline-block' }}>
-                        <i className="fas fa-arrow-left"></i> View Submitted Test Report
+                        <i className="fas fa-arrow-left"></i> View Test Summary Report
                     </Link>
                 </div>
             </div>

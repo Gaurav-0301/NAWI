@@ -238,7 +238,16 @@ export default function ReportSummaryPage() {
                             <Link to={`/report-detailed/${report._id}`} className="btn-secondary" style={{ padding: '12px 20px', borderRadius: '6px', textDecoration: 'none', fontWeight: 600 }}>
                                 <i className="fas fa-list"></i> View Detailed Report
                             </Link>
-                            {user?.role === 'tester' ? (
+                            {user?.role === 'admin' ? (
+                                <button className="btn" style={{ background: '#3B8FF3', padding: '12px 24px' }} onClick={() => window.open(`/certificate/${report._id}`, '_blank')}>
+                                    <i className="fas fa-file-pdf"></i> Generate Official Certificate
+                                </button>
+                            ) : user?.role === 'viewer' ? (
+                                <div style={{ fontSize: '0.85rem', color: '#1e3a8a', background: '#eff6ff', border: '1px solid #bfdbfe', padding: '10px 16px', borderRadius: '6px', display: 'flex', alignItems: 'center', gap: '8px' }}>
+                                    <i className="fas fa-search-plus" style={{ color: '#2563eb' }}></i>
+                                    <span>Review Queue & Forward to Admin for Approval</span>
+                                </div>
+                            ) : (
                                 <button
                                     className="btn"
                                     style={{ background: '#34B1AA', padding: '12px 24px', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '8px' }}
@@ -249,10 +258,6 @@ export default function ReportSummaryPage() {
                                 >
                                     <i className="fas fa-paper-plane"></i>
                                     <span>Sent to Viewer Dashboard</span>
-                                </button>
-                            ) : (
-                                <button className="btn" style={{ background: '#3B8FF3', padding: '12px 24px' }} onClick={() => window.open(`/certificate/${report._id}`, '_blank')}>
-                                    <i className="fas fa-file-pdf"></i> Generate Certificate
                                 </button>
                             )}
                         </div>

@@ -406,7 +406,6 @@ export default function ViewerDashboardPage() {
                                         <th>Tester Name</th>
                                         <th>Date Submitted</th>
                                         <th>Accuracy Class</th>
-                                        <th>Auto Result</th>
                                         <th>Workflow Status</th>
                                         <th>Action</th>
                                     </tr>
@@ -415,6 +414,7 @@ export default function ViewerDashboardPage() {
                                     {filteredReports.map((r) => {
                                         const dateObj = new Date(r.createdAt);
                                         const dateStr = dateObj.toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' });
+                                        const displayClass = (r.accuracy_class || 'III').toString().replace(/^class\s+/i, '');
 
                                         return (
                                             <tr key={r._id} className="table-row-hover">
@@ -436,12 +436,7 @@ export default function ViewerDashboardPage() {
                                                 <td style={{ fontSize: '0.85rem', color: '#475569' }}>{dateStr}</td>
                                                 <td>
                                                     <span style={{ background: '#F1F5F9', color: '#334155', padding: '2px 8px', borderRadius: '4px', fontSize: '0.8rem', fontWeight: 700 }}>
-                                                        Class {r.accuracy_class || 'III'}
-                                                    </span>
-                                                </td>
-                                                <td>
-                                                    <span className={`status-badge ${r.status === 'PASS' ? 'status-pass' : 'status-fail'}`}>
-                                                        {r.status}
+                                                        Class {displayClass}
                                                     </span>
                                                 </td>
                                                 <td>
