@@ -81,7 +81,7 @@ export default function LandingPage() {
                         {/* Step 1 */}
                         <div style={{ background: '#F8FAFC', padding: '26px', borderRadius: '12px', border: '1px solid #E2E8F0', display: 'flex', flexDirection: 'column' }}>
                             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
-                                <div style={{ width: '42px', height: '42px', background: 'rgba(242, 159, 103, 0.15)', color: '#F29F67', borderRadius: '10px', display: 'grid', placeItems: 'center', fontSize: '18px' }}>
+                                <div style={{ width: '42px', height: '42px', background: 'rgba(242, 159, 103, 0.15)', color: '#2563EB', borderRadius: '10px', display: 'grid', placeItems: 'center', fontSize: '18px' }}>
                                     <i className="fas fa-edit"></i>
                                 </div>
                                 <span style={{ fontSize: '1.2rem', fontWeight: 800, color: '#94a3b8' }}>01</span>
@@ -189,7 +189,7 @@ export default function LandingPage() {
                     </div>
 
                     {/* Column 2: This System */}
-                    <div style={{ background: 'white', border: '2px solid #F29F67', borderRadius: '14px', padding: '28px', boxShadow: '0 8px 24px rgba(242, 159, 103, 0.12)' }}>
+                    <div style={{ background: 'white', border: '2px solid #2563EB', borderRadius: '14px', padding: '28px', boxShadow: '0 8px 24px rgba(242, 159, 103, 0.12)' }}>
                         <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '20px', paddingBottom: '14px', borderBottom: '2px solid #FEF0E6' }}>
                             <i className="fas fa-check-circle" style={{ color: '#34B1AA', fontSize: '20px' }}></i>
                             <h3 style={{ margin: 0, border: 'none', padding: 0, color: '#1E1E2C', fontSize: '1.1rem' }}>This System (Schrödinger’s Incident)</h3>
@@ -242,7 +242,7 @@ export default function LandingPage() {
             {/* 5. FOOTER */}
             <footer style={{ marginTop: 'auto', background: '#1E1E2C', color: '#94a3b8', padding: '32px 32px', textAlign: 'center', fontSize: '0.88rem' }}>
                 <div style={{ display: 'flex', justifyContent: 'center', gap: '24px', marginBottom: '16px' }}>
-                    <Link to="/login" style={{ color: '#F29F67', textDecoration: 'none', fontWeight: 600 }}>Login</Link>
+                    <Link to="/login" style={{ color: '#2563EB', textDecoration: 'none', fontWeight: 600 }}>Login</Link>
                     <a href="#how-it-works" style={{ color: '#cbd5e1', textDecoration: 'none' }}>How It Works</a>
                     <a href="#why-different" style={{ color: '#cbd5e1', textDecoration: 'none' }}>Why We're Different</a>
                 </div>

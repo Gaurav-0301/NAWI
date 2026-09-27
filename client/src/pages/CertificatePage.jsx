@@ -27,26 +27,36 @@ export default function CertificatePage() {
         </div>
     );
 
-    if (user?.role !== 'admin') {
+    if (!report) return <div style={{ padding: '40px', textAlign: 'center', color: 'red' }}>Verification Certificate Not Found!</div>;
+
+    const isCertified = ['APPROVED', 'CERTIFIED', 'ISSUED'].includes(report.workflow_status) || report.report_status === 'ISSUED';
+
+    if (!isCertified && user?.role !== 'admin') {
         return (
             <div style={{ background: '#f8fafc', minHeight: '100vh', padding: '40px 20px', display: 'flex', justifyContent: 'center', alignItems: 'center', fontFamily: 'Plus Jakarta Sans, sans-serif' }}>
-                <div style={{ background: 'white', border: '1px solid #cbd5e1', borderRadius: '12px', padding: '32px', maxWidth: '540px', textAlign: 'center', boxShadow: '0 10px 25px rgba(0,0,0,0.08)' }}>
-                    <div style={{ width: '64px', height: '64px', background: '#FEF2F2', color: '#DC2626', borderRadius: '50%', display: 'grid', placeItems: 'center', fontSize: '28px', margin: '0 auto 16px' }}>
-                        <i className="fas fa-lock"></i>
+                <div style={{ background: 'white', border: '1px solid #cbd5e1', borderRadius: '12px', padding: '32px', maxWidth: '560px', textAlign: 'center', boxShadow: '0 10px 25px rgba(0,0,0,0.08)' }}>
+                    <div style={{ width: '64px', height: '64px', background: '#FEF3C7', color: '#D97706', borderRadius: '50%', display: 'grid', placeItems: 'center', fontSize: '28px', margin: '0 auto 16px' }}>
+                        <i className="fas fa-hourglass-half"></i>
                     </div>
-                    <h2 style={{ fontSize: '1.4rem', color: '#1e293b', marginBottom: '8px' }}>Certificate Generation Restricted</h2>
-                    <p style={{ color: '#64748b', fontSize: '0.92rem', lineHeight: '1.5', marginBottom: '24px' }}>
-                        Certificate generation is reserved strictly for the <strong>Administrator</strong> role. {user?.role === 'viewer' ? 'As a Quality Reviewer, please audit the test report readings & proofs and send to Admin for approval.' : 'Your test report has been submitted to the Viewer Dashboard for review.'}
+                    <h2 style={{ fontSize: '1.4rem', color: '#1e293b', marginBottom: '8px' }}>Official Certificate Pending Final Admin Approval</h2>
+                    <p style={{ color: '#64748b', fontSize: '0.92rem', lineHeight: '1.5', marginBottom: '20px' }}>
+                        This verification application (<strong>TP-{id.substring(0, 8).toUpperCase()}</strong>) is currently undergoing official review. Once approved and sealed by the <strong>Administrator Authority</strong>, the official certificate will be published and available publicly.
                     </p>
-                    <Link to={`/report/${id}`} style={{ background: '#F29F67', color: 'white', textDecoration: 'none', padding: '12px 24px', borderRadius: '8px', fontWeight: 600, display: 'inline-block' }}>
-                        <i className="fas fa-arrow-left"></i> View Test Summary Report
-                    </Link>
+                    <div style={{ background: '#F1F5F9', padding: '10px 14px', borderRadius: '6px', fontSize: '0.82rem', color: '#475569', marginBottom: '24px' }}>
+                        Current Stage: <strong style={{ color: '#0284C7' }}>{report.workflow_status || 'SUBMITTED'}</strong>
+                    </div>
+                    <div style={{ display: 'flex', gap: '12px', justifyContent: 'center' }}>
+                        <Link to={`/report/${id}`} style={{ background: '#2563EB', color: 'white', textDecoration: 'none', padding: '10px 20px', borderRadius: '8px', fontWeight: 600 }}>
+                            <i className="fas fa-arrow-left"></i> View Summary Report
+                        </Link>
+                        <Link to={`/verify/${id}`} style={{ background: '#3B8FF3', color: 'white', textDecoration: 'none', padding: '10px 20px', borderRadius: '8px', fontWeight: 600 }}>
+                            <i className="fas fa-qrcode"></i> Public Verification Portal
+                        </Link>
+                    </div>
                 </div>
             </div>
         );
     }
-
-    if (!report) return <div style={{ padding: '40px', textAlign: 'center', color: 'red' }}>Report not found!</div>;
 
     let overallPass = true;
     let passCount = 0;
@@ -149,7 +159,7 @@ export default function CertificatePage() {
                 {/* Header */}
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderBottom: '3px double #1E1E2C', paddingBottom: '14px', marginBottom: '16px' }}>
                     <div style={{ display: 'flex', alignItems: 'center', gap: '14px' }}>
-                        <div style={{ width: '48px', height: '48px', borderRadius: '50%', background: 'linear-gradient(135deg, #1E1E2C, #F29F67)', display: 'grid', placeItems: 'center', color: 'white', fontSize: '22px' }}>
+                        <div style={{ width: '48px', height: '48px', borderRadius: '50%', background: 'linear-gradient(135deg, #1E1E2C, #2563EB)', display: 'grid', placeItems: 'center', color: 'white', fontSize: '22px' }}>
                             <i className="fas fa-balance-scale-right"></i>
                         </div>
                         <div>
@@ -166,7 +176,7 @@ export default function CertificatePage() {
                     <div style={{ display: 'flex', alignItems: 'center', gap: '10px', background: '#F4F5F7', padding: '8px 12px', borderRadius: '6px', border: '1px solid #E4E7ED' }}>
                         <QRCodeSVG value={certUrl} size={54} />
                         <div style={{ fontSize: '9px', lineHeight: '1.3' }}>
-                            <div style={{ fontWeight: 700, color: '#F29F67', fontSize: '11px' }}>{reportIdStr}</div>
+                            <div style={{ fontWeight: 700, color: '#2563EB', fontSize: '11px' }}>{reportIdStr}</div>
                             <div style={{ color: '#6C757D' }}>Date: {dateStr}</div>
                             <div style={{ color: '#34B1AA', fontWeight: 700, marginTop: '2px' }}>✓ Authentic Log</div>
                         </div>

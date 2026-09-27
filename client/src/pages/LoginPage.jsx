@@ -29,7 +29,7 @@ export default function LoginPage() {
     };
 
     return (
-        <div className="min-h-screen bg-[#F4F5F7] flex flex-col font-['Plus_Jakarta_Sans']">
+        <div className="min-h-screen bg-[#F8FAFC] flex flex-col font-['Plus_Jakarta_Sans']">
             <Navbar />
 
             <div className="flex-1 flex items-center justify-center p-5">
@@ -37,10 +37,10 @@ export default function LoginPage() {
                 <div className="bg-white p-8 md:p-10 rounded-2xl border border-slate-200 shadow-xl max-w-md w-full">
                     {/* Brand Header */}
                     <div className="text-center mb-6">
-                        <div className="w-14 h-14 bg-[#F29F67] rounded-xl grid place-items-center text-white text-2xl mx-auto mb-4 shadow-md">
+                        <div className="w-14 h-14 bg-[#2563EB] rounded-xl grid place-items-center text-white text-2xl mx-auto mb-4 shadow-md">
                             <i className="fas fa-balance-scale-right"></i>
                         </div>
-                        <h2 className="text-2xl font-bold text-slate-800 mb-1 font-[Outfit]">
+                        <h2 className="text-2xl font-bold text-slate-800 mb-1 font-['Outfit']">
                             Secure Login
                         </h2>
                         <p className="text-slate-500 text-sm">
@@ -61,7 +61,7 @@ export default function LoginPage() {
                             <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1.5">Email Address</label>
                             <input
                                 type="email"
-                                className="w-full px-3.5 py-2.5 bg-[#FCFBF7] border border-slate-300 rounded-lg text-sm text-slate-800 focus:border-[#F29F67] focus:ring-2 focus:ring-[#F29F67]/20 outline-none transition-all"
+                                className="w-full px-3.5 py-2.5 bg-white border border-slate-300 rounded-lg text-sm text-slate-800 focus:border-[#2563EB] focus:ring-2 focus:ring-[#2563EB]/20 outline-none transition-all"
                                 placeholder="name@organization.com"
                                 value={email}
                                 onChange={(e) => setEmail(e.target.value)}
@@ -73,7 +73,7 @@ export default function LoginPage() {
                             <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1.5">Password</label>
                             <input
                                 type="password"
-                                className="w-full px-3.5 py-2.5 bg-[#FCFBF7] border border-slate-300 rounded-lg text-sm text-slate-800 focus:border-[#F29F67] focus:ring-2 focus:ring-[#F29F67]/20 outline-none transition-all"
+                                className="w-full px-3.5 py-2.5 bg-white border border-slate-300 rounded-lg text-sm text-slate-800 focus:border-[#2563EB] focus:ring-2 focus:ring-[#2563EB]/20 outline-none transition-all"
                                 placeholder="••••••••"
                                 value={password}
                                 onChange={(e) => setPassword(e.target.value)}
@@ -83,7 +83,7 @@ export default function LoginPage() {
 
                         <button 
                             type="submit" 
-                            className="w-full mt-2 bg-[#F29F67] hover:bg-[#D8824C] text-white py-3 rounded-lg font-semibold text-sm transition-all shadow-md hover:-translate-y-0.5 cursor-pointer flex items-center justify-center gap-2 border-0" 
+                            className="w-full mt-2 bg-[#2563EB] hover:bg-[#1D4ED8] text-white py-3 rounded-lg font-semibold text-sm transition-all shadow-md hover:-translate-y-0.5 cursor-pointer flex items-center justify-center gap-2 border-0" 
                             disabled={submitting}
                         >
                             {submitting ? (
@@ -95,12 +95,10 @@ export default function LoginPage() {
                     </form>
 
                     <div className="mt-6 text-center text-slate-400 text-xs">
-                        <i className="fas fa-shield-alt"></i> Encrypted JWT & bcrypt Authentication &bull; Schrödinger’s Incident
+                        <i className="fas fa-shield-alt"></i> Encrypted JWT Authentication &bull; Legal Metrology Governance
                     </div>
                 </div>
             </div>
         </div>
     );
 }
-
-

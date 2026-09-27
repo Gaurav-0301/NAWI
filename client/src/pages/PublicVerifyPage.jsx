@@ -75,7 +75,7 @@ export default function PublicVerifyPage() {
                         width: '52px',
                         height: '52px',
                         background: '#1E1E2C',
-                        color: '#F29F67',
+                        color: '#2563EB',
                         borderRadius: '14px',
                         display: 'grid',
                         placeItems: 'center',
@@ -126,7 +126,7 @@ export default function PublicVerifyPage() {
                                     background: '#FAFAFC',
                                     transition: 'border-color 0.2s'
                                 }}
-                                onFocus={(e) => e.target.style.borderColor = '#F29F67'}
+                                onFocus={(e) => e.target.style.borderColor = '#2563EB'}
                                 onBlur={(e) => e.target.style.borderColor = '#CBD5E1'}
                             />
                             <button
@@ -143,7 +143,7 @@ export default function PublicVerifyPage() {
                     {loading ? (
                         <div style={{ padding: '20px 0' }}>
                             <p style={{ textAlign: 'center', fontSize: '0.88rem', color: '#64748b', marginBottom: '16px' }}>
-                                <i className="fas fa-shield-alt animate-pulse" style={{ color: '#F29F67', marginRight: '6px' }}></i>
+                                <i className="fas fa-shield-alt animate-pulse" style={{ color: '#2563EB', marginRight: '6px' }}></i>
                                 Verifying cryptographic hash seal with blockchain ledger...
                             </p>
                             <SkeletonReportPage />
@@ -193,7 +193,7 @@ export default function PublicVerifyPage() {
                             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', paddingBottom: '12px', borderBottom: '1px solid #E4E7ED', marginBottom: '16px' }}>
                                 <div>
                                     <span style={{ fontSize: '0.75rem', color: '#64748b', textTransform: 'uppercase', letterSpacing: '0.5px' }}>Certificate ID</span>
-                                    <div style={{ fontSize: '1.1rem', fontWeight: 800, color: '#F29F67', fontFamily: 'monospace' }}>{data.reportId}</div>
+                                    <div style={{ fontSize: '1.1rem', fontWeight: 800, color: '#2563EB', fontFamily: 'monospace' }}>{data.reportId}</div>
                                 </div>
                                 <div style={{ textAlign: 'right' }}>
                                     <span style={{ fontSize: '0.75rem', color: '#64748b', textTransform: 'uppercase', letterSpacing: '0.5px' }}>Overall Result</span>
@@ -208,7 +208,7 @@ export default function PublicVerifyPage() {
                             {/* Instrument Details */}
                             <div style={{ background: '#F8FAFC', padding: '14px', borderRadius: '8px', border: '1px solid #E2E8F0', marginBottom: '16px', fontSize: '0.88rem' }}>
                                 <h4 style={{ margin: '0 0 8px 0', fontSize: '0.85rem', color: '#1E1E2C', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
-                                    <i className="fas fa-balance-scale" style={{ color: '#F29F67' }}></i> Instrument Specifications
+                                    <i className="fas fa-balance-scale" style={{ color: '#2563EB' }}></i> Instrument Specifications
                                 </h4>
                                 <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '8px', color: '#334155' }}>
                                     <div><strong>Make:</strong> {data.instrument.manufacturer}</div>
@@ -247,7 +247,7 @@ export default function PublicVerifyPage() {
                                     </span>
                                     <button
                                         onClick={handleCopyHash}
-                                        style={{ background: 'none', border: 'none', color: '#F29F67', fontSize: '0.75rem', cursor: 'pointer', fontWeight: 600 }}
+                                        style={{ background: 'none', border: 'none', color: '#2563EB', fontSize: '0.75rem', cursor: 'pointer', fontWeight: 600 }}
                                     >
                                         {copied ? '✓ Copied' : 'Copy Hash'}
                                     </button>

@@ -2,19 +2,18 @@ const User = require("../models/User");
 const Report = require("../models/Report");
 const RuleSet = require("../models/RuleSet");
 const AuditLog = require("../models/AuditLog");
+const { computeReportHash } = require("../utils/hashReport");
 
 const getAdminDashboard = async (req, res) => {
     try {
         const [allReports, users, rulesets, logs] = await Promise.all([
-            Report.find({}, 
-                "instrument_id instrument_data createdBy createdAt rule_set_version form1_results form2_results form3_results form_zero_results form_tare_results form_tilt_results lab_details sha256_hash workflow_status"
-            ).sort({ createdAt: -1 }).lean(),
+            Report.find({}).sort({ createdAt: -1 }).lean(),
             User.find().select("name email role createdAt").lean(),
             RuleSet.find().sort({ createdAt: -1 }).lean(),
             AuditLog.find().sort({ createdAt: -1 }).limit(150).lean()
         ]);
 
-        let passed = 0, failed = 0;
+        let passed = 0, failed = 0, pending = 0, certified = 0;
         const processedReports = allReports.map(r => {
             let isPass = true;
             const results = [r.form1_results, r.form2_results, r.form3_results, r.form_zero_results, r.form_tare_results, r.form_tilt_results];
@@ -22,6 +21,10 @@ const getAdminDashboard = async (req, res) => {
                 if (res && JSON.stringify(res).includes('"FAIL"')) { isPass = false; break; }
             }
             if (isPass) passed++; else failed++;
+
+            if (r.workflow_status === 'PENDING_ADMIN_APPROVAL') pending++;
+            if (['APPROVED', 'CERTIFIED', 'ISSUED'].includes(r.workflow_status)) certified++;
+
             return { ...r, status: isPass ? "PASS" : "FAIL" };
         });
 
@@ -42,7 +45,8 @@ const getAdminDashboard = async (req, res) => {
             total: allReports.length,
             passed,
             failed,
-            pending: 0,
+            pending,
+            certified,
             users: testers.length
         };
 
@@ -71,17 +75,23 @@ const reviewReportByAdmin = async (req, res) => {
             return res.status(400).json({ error: "Admin rejection requires an explanatory comment for the tester and viewer." });
         }
 
-        const adminName = req.username || req.user.name || "Admin Authority";
-        const newStatus = action === "APPROVE" ? "APPROVED" : "REJECTED_BY_ADMIN";
+        const adminName = req.username || (req.user && req.user.name) || "Admin Authority";
+        const newStatus = action === "APPROVE" ? "CERTIFIED" : "REJECTED_BY_ADMIN";
 
         report.workflow_status = newStatus;
         report.approvedBy = adminName;
+        if (action === "APPROVE") {
+            report.report_status = "ISSUED";
+        }
+
+        // Seal report with deterministic SHA-256 hash
+        report.sha256_hash = computeReportHash(report);
 
         const historyItem = {
             reviewer: adminName,
             role: "Admin",
-            action: action === "APPROVE" ? "APPROVED_BY_ADMIN" : "REJECTED_BY_ADMIN",
-            general_comment: general_comment || "",
+            action: action === "APPROVE" ? "APPROVED_AND_CERTIFIED_BY_ADMIN" : "REJECTED_BY_ADMIN",
+            general_comment: general_comment || (action === "APPROVE" ? "Approved by Admin Authority. Official Verification Certificate Generated & Published." : ""),
             timestamp: new Date()
         };
 
@@ -94,15 +104,15 @@ const reviewReportByAdmin = async (req, res) => {
 
         await AuditLog.create({
             user: adminName,
-            action: action === "APPROVE" ? "Admin Approved Report" : "Admin Rejected Report",
-            details: `Report ID: ${id} -> Status: ${newStatus}`
+            action: action === "APPROVE" ? "Admin Approved Application & Issued Certificate" : "Admin Rejected Application",
+            details: `Report ID: ${id} -> Status: ${newStatus}, Hash: ${report.sha256_hash ? report.sha256_hash.substring(0, 16) : ''}...`
         });
 
         res.json({
             success: true,
             message: action === "APPROVE"
-                ? "Report approved by Admin. Ready for certificate issuance!"
-                : "Report rejected by Admin and returned to Tester and Viewer with comments.",
+                ? "Application approved! Official Certificate generated and publicly published."
+                : "Application rejected by Admin and returned with comments.",
             report
         });
     } catch (err) {

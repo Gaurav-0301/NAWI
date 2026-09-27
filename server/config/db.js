@@ -7,6 +7,7 @@ let isDbInitialized = false;
 
 const initializeDatabase = async () => {
     if (isDbInitialized) return;
+    isDbInitialized = true;
     try {
         // 1. Ensure default users exist in Centralized MongoDB
         const defaultUsers = [
@@ -49,32 +50,30 @@ const initializeDatabase = async () => {
             });
             console.log("✅ Centralized DB Init: Created OIML R-76 V1 ruleset");
         }
-
-        isDbInitialized = true;
     } catch (err) {
         console.error("⚠️ Centralized DB initialization warning:", err.message);
     }
 };
 
 const connectDB = async () => {
+    if (mongoose.connection.readyState === 1) {
+        return mongoose.connection;
+    }
     if (cachedDb && mongoose.connection.readyState === 1) {
         return cachedDb;
     }
+
     const mongoUri = process.env.MONGODB_URI || process.env.MONGO_URI || process.env.MONGO_DB || "mongodb://127.0.0.1:27017/nawi_test_db";
-    
-    if (mongoose.connection.readyState === 2) {
-        await new Promise((resolve) => setTimeout(resolve, 500));
-        if (mongoose.connection.readyState === 1) return mongoose.connection;
-    }
 
     const db = await mongoose.connect(mongoUri, {
-        serverSelectionTimeoutMS: 8000,
-        bufferCommands: false,
+        serverSelectionTimeoutMS: 5000,
+        bufferCommands: true,
     });
     cachedDb = db;
     console.log("✅ Connected to MongoDB");
-    await initializeDatabase();
+    initializeDatabase().catch(err => console.error("DB Seed Error:", err));
     return cachedDb;
 };
 
 module.exports = connectDB;
+

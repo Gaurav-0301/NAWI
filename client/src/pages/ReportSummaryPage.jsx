@@ -80,7 +80,7 @@ export default function ReportSummaryPage() {
                                     <i className="fas fa-book"></i> Rule Set: {report.rule_set_version || 'OIML R-76 V1'}
                                 </div>
                             </div>
-                            <span style={{ background: '#FEF0E6', color: '#F29F67', padding: '6px 14px', borderRadius: '8px', fontWeight: 700, fontSize: '0.9rem' }}>
+                            <span style={{ background: '#FEF0E6', color: '#2563EB', padding: '6px 14px', borderRadius: '8px', fontWeight: 700, fontSize: '0.9rem' }}>
                                 TP-{report._id.substring(0, 8).toUpperCase()}
                             </span>
                         </div>
@@ -101,7 +101,7 @@ export default function ReportSummaryPage() {
                         <div style={{ background: '#F8FAFC', border: '1.5px solid #CBD5E1', borderRadius: '10px', padding: '16px', marginBottom: '20px' }}>
                             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '10px' }}>
                                 <span style={{ fontWeight: 700, fontSize: '0.85rem', color: '#334155', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
-                                    <i className="fas fa-network-wired" style={{ color: '#F29F67', marginRight: '6px' }}></i>
+                                    <i className="fas fa-network-wired" style={{ color: '#2563EB', marginRight: '6px' }}></i>
                                     Verification Workflow Stage
                                 </span>
                                 <span style={{
@@ -120,7 +120,7 @@ export default function ReportSummaryPage() {
                             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '12px', fontSize: '0.82rem', color: '#475569' }}>
                                 <div><i className="fas fa-user-edit" style={{ color: '#3B8FF3' }}></i> <strong>Tester:</strong> {report.createdBy || 'Inspection Officer'}</div>
                                 <div><i className="fas fa-user-check" style={{ color: '#10B981' }}></i> <strong>Viewer (Reviewer):</strong> {report.reviewedBy || 'Quality Reviewer'}</div>
-                                <div><i className="fas fa-stamp" style={{ color: '#F29F67' }}></i> <strong>Admin Official:</strong> {report.approvedBy || 'Admin Authority'}</div>
+                                <div><i className="fas fa-stamp" style={{ color: '#2563EB' }}></i> <strong>Admin Official:</strong> {report.approvedBy || 'Admin Authority'}</div>
                             </div>
 
                             {/* Rejection Comments Box */}
@@ -140,7 +140,7 @@ export default function ReportSummaryPage() {
                         {((report.administrative_evidence && report.administrative_evidence.photos) || report.instrument_photo) && (
                             <div style={{ marginBottom: '20px', padding: '16px', background: 'white', border: '1px solid #e2e8f0', borderRadius: '10px' }}>
                                 <h4 style={{ margin: '0 0 12px 0', border: 'none', color: '#1e293b', fontSize: '0.92rem', display: 'flex', alignItems: 'center', gap: '8px' }}>
-                                    <i className="fas fa-camera" style={{ color: '#F29F67' }}></i> Uploaded Instrument Photographs (Visual Verification)
+                                    <i className="fas fa-camera" style={{ color: '#2563EB' }}></i> Uploaded Instrument Photographs (Visual Verification)
                                 </h4>
                                 <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: '12px' }}>
                                     {report.administrative_evidence?.photos?.front && (

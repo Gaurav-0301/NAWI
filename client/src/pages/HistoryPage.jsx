@@ -96,8 +96,8 @@ export default function HistoryPage() {
                                 border: 'none',
                                 background: 'none',
                                 fontWeight: activeTab === 'all' ? 700 : 500,
-                                color: activeTab === 'all' ? '#F29F67' : '#64748b',
-                                borderBottom: activeTab === 'all' ? '3px solid #F29F67' : 'none',
+                                color: activeTab === 'all' ? '#2563EB' : '#64748b',
+                                borderBottom: activeTab === 'all' ? '3px solid #2563EB' : 'none',
                                 cursor: 'pointer',
                                 fontSize: '0.95rem'
                             }}
@@ -188,7 +188,7 @@ export default function HistoryPage() {
                                                 style={{ cursor: 'pointer', background: isRejected ? '#FEF2F2' : 'transparent' }}
                                                 className="table-row-hover"
                                             >
-                                                <td><strong style={{ color: '#F29F67' }}>TP-{r._id.substring(0, 8).toUpperCase()}</strong></td>
+                                                <td><strong style={{ color: '#2563EB' }}>TP-{r._id.substring(0, 8).toUpperCase()}</strong></td>
                                                 <td>
                                                     <div><strong>{r.instrument_id || "Unknown"}</strong></div>
                                                     <span style={{ fontSize: '0.75rem', color: '#64748b' }}>Class {r.accuracy_class}</span>
@@ -209,7 +209,7 @@ export default function HistoryPage() {
                                                 </td>
                                                 <td>
                                                     {user?.role === 'tester' ? (
-                                                        <span className="status-badge" style={{ background: '#E0F2FE', color: '#0369A1', border: '1px solid #BAE6FD' }}>
+                                                        <span className="status-badge" style={{ background: '#EFF6FF', color: '#1D4ED8', border: '1px solid #BFDBFE' }}>
                                                             <i className="fas fa-paper-plane" style={{ marginRight: '4px' }}></i> SUBMITTED
                                                         </span>
                                                     ) : (

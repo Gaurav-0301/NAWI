@@ -8,6 +8,7 @@
     "client": "npm run dev --prefix client",
     "dev": "npm run build --prefix client && node server/server.js",
     "build": "npm run build --prefix client",
+    "postinstall": "npm install --prefix server && npm install --prefix client",
     "seed": "npm run seed --prefix server"
   },
   "dependencies": {}

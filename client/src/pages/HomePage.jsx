@@ -74,14 +74,14 @@ export default function HomePage() {
     const username = user?.name || user?.username || 'Nishant';
 
     return (
-        <div className="flex min-h-screen w-full bg-[#F4F5F7] font-['Plus_Jakarta_Sans']">
+        <div className="flex min-h-screen w-full bg-[#F8FAFC] font-['Plus_Jakarta_Sans']">
             <Sidebar />
             <div className="flex-1 flex flex-col min-w-0 ml-[260px]">
                 <Header title="Tester Overview Dashboard" />
                 <div className="p-7 md:p-8 flex-1">
                     {/* Welcome Banner */}
                     <div className="mb-6">
-                        <h1 className="text-2xl md:text-3xl font-bold text-slate-800 mb-1 font-['Outfit']">Good day, {username}</h1>
+                        <h1 className="text-2xl md:text-3xl font-bold text-slate-800 mb-1 font-['Outfit'] uppercase">Good day, {username}</h1>
                         <p className="text-slate-500 text-sm">Here's your testing overview and active verification progress</p>
                     </div>
 
@@ -92,7 +92,7 @@ export default function HomePage() {
                             <p className="text-slate-500 text-xs font-semibold uppercase tracking-wider">Total Tests</p>
                         </div>
                         <div className="bg-white p-5 rounded-xl border border-slate-200 shadow-sm">
-                            <h2 className="text-3xl font-extrabold text-[#34B1AA] mb-0.5">{user?.role === 'tester' ? stats.total : stats.passed}</h2>
+                            <h2 className="text-3xl font-extrabold text-[#059669] mb-0.5">{user?.role === 'tester' ? stats.total : stats.passed}</h2>
                             <p className="text-slate-500 text-xs font-semibold uppercase tracking-wider">{user?.role === 'tester' ? 'Submitted' : 'Passed'}</p>
                         </div>
                         <div className="bg-white p-5 rounded-xl border border-slate-200 shadow-sm">
@@ -144,7 +144,7 @@ export default function HomePage() {
                                             </div>
                                             <span className={`px-2.5 py-0.5 rounded-full text-xs font-bold tracking-wide ${
                                                 user?.role === 'tester'
-                                                    ? 'bg-sky-50 text-sky-700 border border-sky-200'
+                                                    ? 'bg-blue-50 text-blue-700 border border-blue-200'
                                                     : t.status === 'PASS' 
                                                         ? 'bg-teal-50 text-teal-700 border border-teal-200' 
                                                         : 'bg-rose-50 text-rose-700 border border-rose-200'
@@ -165,7 +165,7 @@ export default function HomePage() {
                             <div className="flex flex-col gap-3">
                                 <Link 
                                     to="/new-test" 
-                                    className="bg-[#F29F67] hover:bg-[#D8824C] text-white px-5 py-3 rounded-lg font-semibold text-sm transition-all shadow-sm hover:shadow flex items-center gap-3 no-underline"
+                                    className="bg-[#2563EB] hover:bg-[#1D4ED8] text-white px-5 py-3 rounded-lg font-semibold text-sm transition-all shadow-sm hover:shadow flex items-center gap-3 no-underline"
                                 >
                                     <i className="fas fa-plus"></i> New Test Setup
                                 </Link>
@@ -189,4 +189,3 @@ export default function HomePage() {
         </div>
     );
 }
-

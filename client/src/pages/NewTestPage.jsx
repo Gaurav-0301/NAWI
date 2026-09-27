@@ -207,7 +207,7 @@ export default function NewTestPage() {
                             Configure instrument parameters & upload required OIML administrative evidence for automated evaluation.
                         </p>
 
-                        <div style={{ marginTop: '14px', padding: '12px 18px', background: '#FEF0E6', border: '1.5px solid #F29F67', borderRadius: '8px' }}>
+                        <div style={{ marginTop: '14px', padding: '12px 18px', background: '#FEF0E6', border: '1.5px solid #2563EB', borderRadius: '8px' }}>
                             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: '8px' }}>
                                 <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
                                     <span style={{ background: '#086e0dff', color: 'white', fontSize: '0.75rem', fontWeight: 700, padding: '3px 10px', borderRadius: '12px' }}>
@@ -227,7 +227,7 @@ export default function NewTestPage() {
                     <div className="form-card">
                         <form onSubmit={handleSubmit}>
                             {/* Section 1: Instrument Specifications */}
-                            <h3 style={{ marginTop: 0, paddingBottom: '10px', borderBottom: '1px solid #E4E7ED', color: '#F29F67', fontFamily: 'Outfit, sans-serif', fontSize: '1.15rem' }}>
+                            <h3 style={{ marginTop: 0, paddingBottom: '10px', borderBottom: '1px solid #E4E7ED', color: '#2563EB', fontFamily: 'Outfit, sans-serif', fontSize: '1.15rem' }}>
                                 1. Instrument Specifications & Metrological Parameters
                             </h3>
 
@@ -306,7 +306,7 @@ export default function NewTestPage() {
                                 <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '16px', flexWrap: 'wrap', gap: '8px' }}>
                                     <div>
                                         <h4 style={{ margin: 0, color: '#1E1E2C', fontSize: '1.05rem', fontFamily: 'Outfit, sans-serif', fontWeight: 600, display: 'flex', alignItems: 'center', gap: '8px' }}>
-                                            <i className="fas fa-camera-retro" style={{ color: '#F29F67' }}></i> Instrument & Administrative Evidence Uploads
+                                            <i className="fas fa-camera-retro" style={{ color: '#2563EB' }}></i> Instrument & Administrative Evidence Uploads
                                         </h4>
                                         <p style={{ margin: '4px 0 0 0', fontSize: '0.85rem', color: '#64748b' }}>
                                             Attach verified photographs & technical compliance documents required for certification trail.
@@ -320,7 +320,7 @@ export default function NewTestPage() {
                                 {/* Photographed Evidence Upload Cards with Instant Live Thumbnails */}
                                 <div style={{ marginBottom: '20px' }}>
                                     <label style={{ fontWeight: 700, fontSize: '0.85rem', color: '#334155', textTransform: 'uppercase', letterSpacing: '0.5px', marginBottom: '12px', display: 'block' }}>
-                                        <i className="fas fa-images" style={{ color: '#F29F67', marginRight: '6px' }}></i>
+                                        <i className="fas fa-images" style={{ color: '#2563EB', marginRight: '6px' }}></i>
                                         1. Instrument Photographs (Visual Proof)
                                     </label>
 
@@ -344,7 +344,7 @@ export default function NewTestPage() {
                                                 </div>
                                             ) : (
                                                 <label style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: '18px 12px', background: '#FCFBF7', border: '1.5px dashed #CBD5E1', borderRadius: '8px', cursor: 'pointer', transition: 'all 0.2s' }}>
-                                                    <i className="fas fa-cloud-upload-alt" style={{ fontSize: '1.4rem', color: '#F29F67', marginBottom: '6px' }}></i>
+                                                    <i className="fas fa-cloud-upload-alt" style={{ fontSize: '1.4rem', color: '#2563EB', marginBottom: '6px' }}></i>
                                                     <span style={{ fontSize: '0.78rem', color: '#475569', fontWeight: 600 }}>Select Front View Photo</span>
                                                     <span style={{ fontSize: '0.7rem', color: '#94a3b8' }}>PNG, JPG or WEBP</span>
                                                     <input type="file" accept="image/*" style={{ display: 'none' }} onChange={(e) => handleFileChange(e, 'photo_front')} />
@@ -370,7 +370,7 @@ export default function NewTestPage() {
                                                 </div>
                                             ) : (
                                                 <label style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: '18px 12px', background: '#FCFBF7', border: '1.5px dashed #CBD5E1', borderRadius: '8px', cursor: 'pointer', transition: 'all 0.2s' }}>
-                                                    <i className="fas fa-id-card" style={{ fontSize: '1.4rem', color: '#F29F67', marginBottom: '6px' }}></i>
+                                                    <i className="fas fa-id-card" style={{ fontSize: '1.4rem', color: '#2563EB', marginBottom: '6px' }}></i>
                                                     <span style={{ fontSize: '0.78rem', color: '#475569', fontWeight: 600 }}>Select Nameplate Photo</span>
                                                     <span style={{ fontSize: '0.7rem', color: '#94a3b8' }}>Shows Max, e, Serial No</span>
                                                     <input type="file" accept="image/*" style={{ display: 'none' }} onChange={(e) => handleFileChange(e, 'photo_nameplate')} />
@@ -396,7 +396,7 @@ export default function NewTestPage() {
                                                 </div>
                                             ) : (
                                                 <label style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: '18px 12px', background: '#FCFBF7', border: '1.5px dashed #CBD5E1', borderRadius: '8px', cursor: 'pointer', transition: 'all 0.2s' }}>
-                                                    <i className="fas fa-camera" style={{ fontSize: '1.4rem', color: '#F29F67', marginBottom: '6px' }}></i>
+                                                    <i className="fas fa-camera" style={{ fontSize: '1.4rem', color: '#2563EB', marginBottom: '6px' }}></i>
                                                     <span style={{ fontSize: '0.78rem', color: '#475569', fontWeight: 600 }}>Select Rear/Side Photo</span>
                                                     <span style={{ fontSize: '0.7rem', color: '#94a3b8' }}>Seals & Connection Ports</span>
                                                     <input type="file" accept="image/*" style={{ display: 'none' }} onChange={(e) => handleFileChange(e, 'photo_rear_side')} />
@@ -459,7 +459,7 @@ export default function NewTestPage() {
                             </div>
 
                             {/* Section 3: Laboratory & Environmental Details */}
-                            <h3 style={{ marginTop: '30px', marginBottom: '16px', borderBottom: '1px solid #E4E7ED', paddingBottom: '10px', color: '#F29F67', fontFamily: 'Outfit, sans-serif', fontSize: '1.15rem' }}>
+                            <h3 style={{ marginTop: '30px', marginBottom: '16px', borderBottom: '1px solid #E4E7ED', paddingBottom: '10px', color: '#2563EB', fontFamily: 'Outfit, sans-serif', fontSize: '1.15rem' }}>
                                 3. Laboratory & Environmental Test Conditions
                             </h3>
 

@@ -74,14 +74,14 @@ export default function TestPlanPage() {
                     {/* Summary Card */}
                     <div className="form-card" style={{ background: 'linear-gradient(135deg, #1E1E2C 0%, #0F172A 100%)', color: 'white', border: 'none' }}>
                         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '12px' }}>
-                            <h2 style={{ color: '#F29F67', margin: 0, padding: 0, border: 'none' }}>AUTOMATIC TEST PLAN</h2>
+                            <h2 style={{ color: '#2563EB', margin: 0, padding: 0, border: 'none' }}>AUTOMATIC TEST PLAN</h2>
                             <span style={{ background: 'rgba(255,255,255,0.1)', padding: '4px 12px', borderRadius: '20px', fontSize: '0.8rem', fontWeight: 600 }}>
                                 TP-NEW
                             </span>
                         </div>
 
                         <div style={{ display: 'flex', alignItems: 'center', gap: '8px', margin: '8px 0 16px 0' }}>
-                            <span style={{ background: 'rgba(242, 159, 103, 0.15)', color: '#F29F67', border: '1px solid rgba(242, 159, 103, 0.3)', padding: '4px 12px', borderRadius: '10px', fontSize: '0.78rem', fontWeight: 700 }}>
+                            <span style={{ background: 'rgba(242, 159, 103, 0.15)', color: '#2563EB', border: '1px solid rgba(242, 159, 103, 0.3)', padding: '4px 12px', borderRadius: '10px', fontSize: '0.78rem', fontWeight: 700 }}>
                                 <i className="fas fa-book"></i> Active Rule Set: {ruleSetVersion}
                             </span>
                         </div>
@@ -91,7 +91,7 @@ export default function TestPlanPage() {
                         </div>
 
                         <div style={{ display: 'flex', gap: '16px', flexWrap: 'wrap', borderTop: '1px solid rgba(255,255,255,0.1)', paddingTop: '16px', fontSize: '0.85rem' }}>
-                            <span style={{ color: '#F29F67', fontWeight: 700 }}>{requiredCount} Required</span>
+                            <span style={{ color: '#2563EB', fontWeight: 700 }}>{requiredCount} Required</span>
                             <span style={{ color: '#E0B50F', fontWeight: 700 }}>{optionalCount} Optional</span>
                             <span style={{ color: '#38bdf8', fontWeight: 700 }}>{loadPointsCount} Load Points</span>
                             <span style={{ color: '#94a3b8' }}>Est. ~15 min</span>
@@ -106,7 +106,7 @@ export default function TestPlanPage() {
                             {testPlan.map((t) => (
                                 <div key={t.id} className="form-card" style={{ margin: 0, padding: '16px 20px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '16px' }}>
                                     <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
-                                        <div style={{ width: '40px', height: '40px', background: t.status === 'REQUIRED' ? 'rgba(242, 159, 103, 0.15)' : '#f1f5f9', color: t.status === 'REQUIRED' ? '#F29F67' : '#94a3b8', borderRadius: '10px', display: 'grid', placeItems: 'center', fontSize: '18px' }}>
+                                        <div style={{ width: '40px', height: '40px', background: t.status === 'REQUIRED' ? 'rgba(242, 159, 103, 0.15)' : '#f1f5f9', color: t.status === 'REQUIRED' ? '#2563EB' : '#94a3b8', borderRadius: '10px', display: 'grid', placeItems: 'center', fontSize: '18px' }}>
                                             <i className={t.icon}></i>
                                         </div>
                                         <div>

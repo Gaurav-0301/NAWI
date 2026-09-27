@@ -124,11 +124,25 @@ const verifyReport = async (req, res) => {
         let report = null;
         if (mongoose.Types.ObjectId.isValid(rawId)) {
             report = await Report.findById(rawId).lean();
-        } else {
-            // Match formatted string substring ID or instrument_id
-            const cleanQuery = rawId.replace(/^TP-/i, "");
-            const all = await Report.find().lean();
-            report = all.find(r => r._id.toString().substring(0, 8).toUpperCase() === cleanQuery.toUpperCase());
+        }
+        if (!report) {
+            const cleanQuery = rawId.replace(/^TP-/i, "").trim().toUpperCase();
+            // Fast Mongo query by exact string prefix matching on hex ObjectId string representation
+            if (cleanQuery.length === 24 && mongoose.Types.ObjectId.isValid(cleanQuery)) {
+                report = await Report.findById(cleanQuery).lean();
+            }
+            if (!report) {
+                // Find matching report where string prefix of _id matches cleanQuery
+                const hexPattern = new RegExp(`^${cleanQuery.toLowerCase()}`);
+                report = await Report.findOne({
+                    $expr: {
+                        $regexMatch: {
+                            input: { $toString: "$_id" },
+                            regex: hexPattern
+                        }
+                    }
+                }).lean();
+            }
         }
 
         if (!report) {

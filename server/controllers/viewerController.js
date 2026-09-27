@@ -61,7 +61,10 @@ const getViewerReports = async (req, res) => {
             sortOrder = { createdAt: -1 };
         }
 
-        const reports = await Report.find(query).sort(sortOrder).lean();
+        const reports = await Report.find(query)
+            .select("-instrument_photo -administrative_evidence -reading_proofs -evidence_register")
+            .sort(sortOrder)
+            .lean();
 
         reports.forEach(r => {
             let isPass = true;

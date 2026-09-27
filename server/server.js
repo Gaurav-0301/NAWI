@@ -28,16 +28,8 @@ app.use(express.json({ limit: "25mb" }));
 app.use(express.urlencoded({ extended: true, limit: "25mb" }));
 app.use(cookieParser());
 
-// Database Connection Middleware
-app.use(async (req, res, next) => {
-    try {
-        await connectDB();
-        next();
-    } catch (err) {
-        console.error("❌ MongoDB connection error:", err.message);
-        res.status(500).json({ error: "Database Connection Error: " + err.message });
-    }
-});
+// Initialize DB connection
+connectDB().catch(err => console.error("❌ Startup MongoDB Connection Error:", err.message));
 
 // Mount API Routes
 app.use("/api", authRoutes);

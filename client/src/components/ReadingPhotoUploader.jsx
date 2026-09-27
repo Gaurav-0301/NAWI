@@ -178,7 +178,7 @@ export default function ReadingPhotoUploader({ readingKey, label, currentProof, 
                 <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: '8px' }}>
                     <div>
                         <span style={{ fontSize: '0.82rem', fontWeight: 600, color: '#334155', display: 'flex', alignItems: 'center', gap: '6px' }}>
-                            <i className="fas fa-camera" style={{ color: '#F29F67' }}></i>
+                            <i className="fas fa-camera" style={{ color: '#2563EB' }}></i>
                             {label || "Upload Reading Photo Proof (Required)"}
                         </span>
                         <div style={{ fontSize: '0.74rem', color: '#64748b', marginTop: '2px' }}>
@@ -191,7 +191,7 @@ export default function ReadingPhotoUploader({ readingKey, label, currentProof, 
                         onClick={() => fileInputRef.current && fileInputRef.current.click()}
                         disabled={uploading}
                         style={{
-                            background: uploading ? '#94a3b8' : '#F29F67',
+                            background: uploading ? '#94a3b8' : '#2563EB',
                             color: 'white',
                             border: 'none',
                             padding: '6px 14px',

@@ -69,7 +69,7 @@ export default function ReportDetailedPage() {
                         <i className="fas fa-clock"></i> {proof.timestamp ? new Date(proof.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : 'Timestamped'}
                     </div>
                     <div style={{ fontSize: '0.66rem', color: '#334155', marginTop: '2px' }}>
-                        <i className="fas fa-map-marker-alt" style={{ color: '#F29F67', marginRight: '2px' }}></i>
+                        <i className="fas fa-map-marker-alt" style={{ color: '#2563EB', marginRight: '2px' }}></i>
                         {proof.locationText || (proof.latitude ? `${proof.latitude.toFixed(2)}, ${proof.longitude.toFixed(2)}` : 'GPS Verified')}
                     </div>
                 </div>
@@ -109,7 +109,7 @@ export default function ReportDetailedPage() {
                     {/* Weighing Performance */}
                     {Object.keys(f1r).length > 0 && (
                         <div className="table-card">
-                            <h3 style={{ marginTop: 0, color: '#F29F67' }}><i className="fas fa-weight"></i> Weighing Performance & Reading Proofs</h3>
+                            <h3 style={{ marginTop: 0, color: '#2563EB' }}><i className="fas fa-weight"></i> Weighing Performance & Reading Proofs (OIML R76-1 Clause 3.5.1)</h3>
                             <table>
                                 <thead>
                                     <tr>
@@ -168,13 +168,16 @@ export default function ReportDetailedPage() {
                                     })}
                                 </tbody>
                             </table>
+                            <div style={{ marginTop: '12px', background: '#EFF6FF', border: '1px solid #BFDBFE', padding: '12px 16px', borderRadius: '8px', fontSize: '0.83rem', color: '#1E3A8A' }}>
+                                <strong style={{ color: '#1E40AF' }}><i className="fas fa-calculator"></i> Metrological Calculation Proof:</strong> Error <em>E = Indication (I) - Target Load (L)</em>. Evaluated across load steps (&plusmn;0.5e, &plusmn;1.0e, &plusmn;1.5e) for Class <strong>{report.instrument_data?.Class_value || report.accuracy_class || 'III'}</strong> with scale interval <em>e = {report.instrument_data?.e_value || 10} g</em>.
+                            </div>
                         </div>
                     )}
 
                     {/* Repeatability */}
                     {f2r.Repeatability && (
                         <div className="table-card">
-                            <h3 style={{ marginTop: 0, color: '#F29F67' }}><i className="fas fa-sync-alt"></i> Repeatability Test & Photo Proofs</h3>
+                            <h3 style={{ marginTop: 0, color: '#2563EB' }}><i className="fas fa-sync-alt"></i> Repeatability Test & Photo Proofs (OIML R76-1 Clause 3.6.1)</h3>
                             <table>
                                 <thead>
                                     <tr>
@@ -213,13 +216,16 @@ export default function ReportDetailedPage() {
                                     </tr>
                                 </tbody>
                             </table>
+                            <div style={{ marginTop: '12px', background: '#FEF3C7', border: '1px solid #FDE68A', padding: '12px 16px', borderRadius: '8px', fontSize: '0.83rem', color: '#92400E' }}>
+                                <strong style={{ color: '#78350F' }}><i className="fas fa-calculator"></i> Metrological Calculation Proof:</strong> Range Variation <em>&Delta;I = I_max - I_min = {((f2r.range || 0) * 1000).toFixed(1)} g</em> must not exceed absolute MPE limit <em>&plusmn;{((f2r.limit || 0) * 1000).toFixed(1)} g</em>.
+                            </div>
                         </div>
                     )}
 
                     {/* Eccentricity */}
                     {f3r.details && (
                         <div className="table-card">
-                            <h3 style={{ marginTop: 0, color: '#F29F67' }}><i className="fas fa-crosshairs"></i> Eccentricity Test & Position Proofs</h3>
+                            <h3 style={{ marginTop: 0, color: '#2563EB' }}><i className="fas fa-crosshairs"></i> Eccentricity Test & Position Proofs (OIML R76-1 Clause 3.6.2)</h3>
                             <table>
                                 <thead>
                                     <tr>
@@ -256,19 +262,22 @@ export default function ReportDetailedPage() {
                                     ))}
                                 </tbody>
                             </table>
+                            <div style={{ marginTop: '12px', background: '#EFF6FF', border: '1px solid #BFDBFE', padding: '12px 16px', borderRadius: '8px', fontSize: '0.83rem', color: '#1E3A8A' }}>
+                                <strong style={{ color: '#1E40AF' }}><i className="fas fa-calculator"></i> Metrological Calculation Proof:</strong> Error at each quadrant <em>E_pos = I_pos - L_ecc</em> with 1/3 Max capacity load applied off-center.
+                            </div>
                         </div>
                     )}
 
                     {/* Zero, Tare, Tilt */}
                     {[
-                        { name: "Zero-Setting Test", data: fZr, resKey: "ZeroSetting", proofKey: "zero_setting" },
-                        { name: "Tare Accuracy Test", data: fTar, resKey: "TareAccuracy", proofKey: "tare_accuracy" },
-                        { name: "Tilt Test", data: fTilr, resKey: "TiltTest", proofKey: "tilt_test" }
+                        { name: "Zero-Setting Test", data: fZr, resKey: "ZeroSetting", proofKey: "zero_setting", clause: "Clause 3.8.1", rule: "E_0 = I_0 - 0 <= ±0.25e" },
+                        { name: "Tare Accuracy Test", data: fTar, resKey: "TareAccuracy", proofKey: "tare_accuracy", clause: "Clause 3.5.3.4", rule: "E_net = I_net - L_net <= MPE" },
+                        { name: "Tilt Test", data: fTilr, resKey: "TiltTest", proofKey: "tilt_test", clause: "Clause 3.9.1", rule: "E_tilt <= MPE under max inclination" }
                     ].map(t => {
                         if (!t.data || !t.data[t.resKey]) return null;
                         return (
                             <div className="table-card" key={t.name}>
-                                <h3 style={{ marginTop: 0, color: '#F29F67' }}>{t.name} & Photo Proof</h3>
+                                <h3 style={{ marginTop: 0, color: '#2563EB' }}>{t.name} & Photo Proof (OIML R76-1 {t.clause})</h3>
                                 <table>
                                     <thead>
                                         <tr>
@@ -299,13 +308,16 @@ export default function ReportDetailedPage() {
                                         </tr>
                                     </tbody>
                                 </table>
+                                <div style={{ marginTop: '12px', background: '#ECFDF5', border: '1px solid #A7F3D0', padding: '10px 14px', borderRadius: '6px', fontSize: '0.82rem', color: '#065F46' }}>
+                                    <strong>Clause Calculation Rule:</strong> {t.rule}
+                                </div>
                             </div>
                         );
                     })}
 
                     {/* Evidence Register */}
                     <div className="table-card">
-                        <h3 style={{ marginTop: 0, color: '#F29F67' }}><i className="fas fa-folder-open"></i> Evidence Register (OIML R 76-2)</h3>
+                        <h3 style={{ marginTop: 0, color: '#2563EB' }}><i className="fas fa-folder-open"></i> Evidence Register (OIML R 76-2)</h3>
                         {evReg.length > 0 ? (
                             <table>
                                 <thead>

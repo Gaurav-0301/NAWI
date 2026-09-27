@@ -379,14 +379,14 @@ export default function TestExecutionPage() {
                             <span>{Math.round(((currentIdx + 1) / testsToRun.length) * 100)}% Completed</span>
                         </div>
                         <div style={{ height: '8px', background: '#e2e8f0', borderRadius: '4px', overflow: 'hidden' }}>
-                            <div style={{ height: '100%', width: `${((currentIdx + 1) / testsToRun.length) * 100}%`, background: '#F29F67', transition: 'width 0.3s' }}></div>
+                            <div style={{ height: '100%', width: `${((currentIdx + 1) / testsToRun.length) * 100}%`, background: '#2563EB', transition: 'width 0.3s' }}></div>
                         </div>
                     </div>
 
                     {/* Active Test Card */}
                     <div className="form-card">
                         <div style={{ display: 'flex', alignItems: 'center', gap: '14px', marginBottom: '20px' }}>
-                            <div style={{ width: '44px', height: '44px', background: 'rgba(242, 159, 103, 0.15)', color: '#F29F67', borderRadius: '10px', display: 'grid', placeItems: 'center', fontSize: '20px' }}>
+                            <div style={{ width: '44px', height: '44px', background: 'rgba(242, 159, 103, 0.15)', color: '#2563EB', borderRadius: '10px', display: 'grid', placeItems: 'center', fontSize: '20px' }}>
                                 <i className={currentTest.icon}></i>
                             </div>
                             <div>
@@ -400,7 +400,7 @@ export default function TestExecutionPage() {
                         {/* TEST 1: Visual Inspection */}
                         {currentTest.id === 1 && (
                             <div>
-                                <h4 style={{ color: '#F29F67' }}>Checklist Observations</h4>
+                                <h4 style={{ color: '#2563EB' }}>Checklist Observations</h4>
                                 <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: '12px', marginTop: '16px' }}>
                                     {[
                                         { key: 'marking', label: 'Markings complete, indelible & legible' },
@@ -415,7 +415,7 @@ export default function TestExecutionPage() {
                                                 type="checkbox"
                                                 checked={form0[item.key]}
                                                 onChange={e => setForm0(prev => ({ ...prev, [item.key]: e.target.checked }))}
-                                                style={{ width: '18px', height: '18px', accentColor: '#F29F67' }}
+                                                style={{ width: '18px', height: '18px', accentColor: '#2563EB' }}
                                             />
                                             <span style={{ fontSize: '0.9rem', color: '#334155', fontWeight: 500 }}>{item.label}</span>
                                         </label>
@@ -435,7 +435,7 @@ export default function TestExecutionPage() {
                         {/* TEST 2: Weighing Performance */}
                         {currentTest.id === 2 && (
                             <div>
-                                <h4 style={{ color: '#F29F67', marginBottom: '16px' }}>Ascending & Descending Readings</h4>
+                                <h4 style={{ color: '#2563EB', marginBottom: '16px' }}>Ascending & Descending Readings</h4>
                                 <table>
                                     <thead>
                                         <tr>
@@ -502,7 +502,7 @@ export default function TestExecutionPage() {
                         {/* TEST 3: Repeatability */}
                         {currentTest.id === 3 && (
                             <div>
-                                <h4 style={{ color: '#F29F67' }}>Repeatability Test Readings</h4>
+                                <h4 style={{ color: '#2563EB' }}>Repeatability Test Readings</h4>
                                 <p style={{ fontSize: '0.88rem', color: '#64748b', marginBottom: '16px' }}>
                                     Applied Test Load: <strong>{(currentTest.load / 1000).toFixed(3)} kg</strong>
                                 </p>
@@ -538,7 +538,7 @@ export default function TestExecutionPage() {
                         {/* TEST 4: Eccentricity */}
                         {currentTest.id === 4 && (
                             <div>
-                                <h4 style={{ color: '#F29F67' }}>Eccentricity Off-Center Loading</h4>
+                                <h4 style={{ color: '#2563EB' }}>Eccentricity Off-Center Loading</h4>
                                 <p style={{ fontSize: '0.88rem', color: '#64748b', marginBottom: '16px' }}>Applied Test Load: <strong>{(currentTest.load / 1000).toFixed(3)} kg</strong></p>
 
                                 <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: '16px', margin: '20px 0' }}>
@@ -572,7 +572,7 @@ export default function TestExecutionPage() {
                         {/* TEST 5: Zero Setting */}
                         {currentTest.id === 5 && (
                             <div>
-                                <h4 style={{ color: '#F29F67' }}>Zero-Setting / Zero Tracking</h4>
+                                <h4 style={{ color: '#2563EB' }}>Zero-Setting / Zero Tracking</h4>
                                 <div style={{ maxWidth: '450px', margin: '20px 0' }}>
                                     <div className="form-group">
                                         <label>Zero Indication Reading (kg)</label>
@@ -599,7 +599,7 @@ export default function TestExecutionPage() {
                         {/* TEST 6: Tare Accuracy */}
                         {currentTest.id === 6 && (
                             <div>
-                                <h4 style={{ color: '#F29F67' }}>Tare Accuracy Test</h4>
+                                <h4 style={{ color: '#2563EB' }}>Tare Accuracy Test</h4>
                                 <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(250px, 1fr))', gap: '16px', margin: '20px 0' }}>
                                     <div className="form-group">
                                         <label>Tare Load Applied (kg)</label>
@@ -636,7 +636,7 @@ export default function TestExecutionPage() {
                         {/* TEST 8: Tilt Test */}
                         {currentTest.id === 8 && (
                             <div>
-                                <h4 style={{ color: '#F29F67' }}>Tilt Test Observations</h4>
+                                <h4 style={{ color: '#2563EB' }}>Tilt Test Observations</h4>
                                 <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '16px', margin: '20px 0' }}>
                                     <div className="form-group">
                                         <label>Level Reference (kg)</label>
