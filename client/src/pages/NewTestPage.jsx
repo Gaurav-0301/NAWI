@@ -44,7 +44,7 @@ export default function NewTestPage() {
     });
 
     useEffect(() => {
-        fetch('/api/rules/active')
+        fetch(`${import.meta.env.VITE_API_URL || ''}/api/rules/active`)
             .then(res => res.json())
             .then(data => {
                 if (data && data.version_name) {

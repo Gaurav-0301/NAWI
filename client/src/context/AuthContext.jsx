@@ -13,6 +13,8 @@ export function AuthProvider({ children }) {
         setTimeout(() => setToast(null), 4000);
     };
 
+    const getApiUrl = (path) => path.startsWith('http') ? path : `${import.meta.env.VITE_API_URL || ''}${path}`;
+
     // Helper for authorized fetch calls with JWT Bearer Token
     const authFetch = useCallback(async (url, options = {}) => {
         const headers = options.headers || {};
@@ -20,20 +22,21 @@ export function AuthProvider({ children }) {
             headers['Authorization'] = `Bearer ${accessToken}`;
         }
         options.headers = headers;
+        options.credentials = options.credentials || 'include';
 
-        let response = await fetch(url, options);
+        let response = await fetch(getApiUrl(url), options);
 
         // If 401 token expired, attempt token refresh automatically
-        if (response.status === 401 && url !== '/api/auth/login' && url !== '/api/auth/refresh') {
+        if (response.status === 401 && !url.includes('/api/auth/login') && !url.includes('/api/auth/refresh')) {
             try {
-                const refreshRes = await fetch('/api/auth/refresh', { method: 'POST' });
+                const refreshRes = await fetch(getApiUrl('/api/auth/refresh'), { method: 'POST', credentials: 'include' });
                 const refreshData = await refreshRes.json();
                 if (refreshRes.ok && refreshData.accessToken) {
                     setAccessToken(refreshData.accessToken);
                     setUser(refreshData.user);
                     headers['Authorization'] = `Bearer ${refreshData.accessToken}`;
                     options.headers = headers;
-                    response = await fetch(url, options);
+                    response = await fetch(getApiUrl(url), options);
                 } else {
                     setUser(null);
                     setAccessToken(null);
@@ -49,13 +52,13 @@ export function AuthProvider({ children }) {
     // Check current auth status on app initialization
     const checkAuth = async () => {
         try {
-            const res = await fetch('/api/auth/me');
+            const res = await fetch(getApiUrl('/api/auth/me'), { credentials: 'include' });
             const data = await res.json();
             if (data.authenticated && data.user) {
                 setUser(data.user);
             } else {
                 // Try silent refresh
-                const refreshRes = await fetch('/api/auth/refresh', { method: 'POST' });
+                const refreshRes = await fetch(getApiUrl('/api/auth/refresh'), { method: 'POST', credentials: 'include' });
                 const refreshData = await refreshRes.json();
                 if (refreshRes.ok && refreshData.accessToken) {
                     setAccessToken(refreshData.accessToken);
@@ -76,9 +79,10 @@ export function AuthProvider({ children }) {
     }, []);
 
     const login = async (email, password) => {
-        const res = await fetch('/api/auth/login', {
+        const res = await fetch(getApiUrl('/api/auth/login'), {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
+            credentials: 'include',
             body: JSON.stringify({ email, password })
         });
         const data = await res.json();
@@ -91,9 +95,10 @@ export function AuthProvider({ children }) {
     };
 
     const register = async (name, email, password, role = 'tester') => {
-        const res = await fetch('/api/auth/register', {
+        const res = await fetch(getApiUrl('/api/auth/register'), {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
+            credentials: 'include',
             body: JSON.stringify({ name, email, password, role })
         });
         const data = await res.json();
@@ -107,7 +112,7 @@ export function AuthProvider({ children }) {
 
     const logout = async () => {
         try {
-            await fetch('/api/auth/logout', { method: 'POST' });
+            await fetch(getApiUrl('/api/auth/logout'), { method: 'POST', credentials: 'include' });
         } catch (e) {}
         setUser(null);
         setAccessToken(null);

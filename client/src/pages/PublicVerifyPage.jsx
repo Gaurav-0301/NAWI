@@ -28,7 +28,7 @@ export default function PublicVerifyPage() {
         if (!activeId) return;
 
         setLoading(true);
-        fetch(`/api/verify/${encodeURIComponent(activeId)}`)
+        fetch(`${import.meta.env.VITE_API_URL || ''}/api/verify/${encodeURIComponent(activeId)}`)
             .then(res => res.json())
             .then(resData => {
                 setData(resData);

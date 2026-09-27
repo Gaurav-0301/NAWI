@@ -11,7 +11,7 @@ export default function CertificatePage() {
     const [loading, setLoading] = useState(true);
 
     useEffect(() => {
-        fetch(`/api/report/${id}`)
+        fetch(`${import.meta.env.VITE_API_URL || ''}/api/report/${id}`)
             .then(res => res.json())
             .then(data => {
                 if (data && !data.error) setReport(data);
