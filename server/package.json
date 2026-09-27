@@ -5,6 +5,7 @@
   "main": "server.js",
   "scripts": {
     "start": "node server.js",
+    "build": "echo 'Server build complete'",
     "dev": "node --watch server.js",
     "seed": "node seed_rules.js"
   },
