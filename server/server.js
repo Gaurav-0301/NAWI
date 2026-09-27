@@ -39,6 +39,11 @@ app.use("/api", viewerRoutes);
 app.use("/api", adminRoutes);
 app.use("/api", ruleRoutes);
 
+app.get('/health',(req,res)=>{
+   res.send("NAWI Server is Live ❄️ ")
+}
+)
+
 // Serve static React build in production
 if (process.env.NODE_ENV === "production") {
     const clientDist = path.join(__dirname, "../client/dist");
